@@ -1,0 +1,2096 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+    <title>GitLab</title>
+    <link rel="stylesheet" href="dist/reset.css">
+    <link rel="stylesheet" href="dist/reveal.css" />
+    <link rel="stylesheet" href="css/slides-extended.css" />
+    <link rel="stylesheet" href="dist/theme/white.css" id="theme" />
+    <link rel="stylesheet" href="plugin/highlight/zenburn.css" />
+    <link rel="stylesheet" href="plugin/customcontrols/style.css">
+
+
+    <link rel="stylesheet" href="gitlab.css" />
+
+    <script defer src="dist/fontawesome/all.min.js"></script>
+
+    <script type="text/javascript">
+        function pageInIframe() {
+            return (window.location !== window.parent.location);
+        }
+
+        let forgetPop = true;
+        function onPopState(event) {
+            if(forgetPop){
+                forgetPop = false;
+            } else if( pageInIframe()) {
+                parent.postMessage(event.target.location.href, "app://obsidian.md");
+            }
+        }
+        window.onpopstate = onPopState;
+        window.onmessage = event => {
+            if(event.data == "reload"){
+                window.document.location.reload();
+            }
+            forgetPop = true;
+        }
+
+        function fitElements() {
+            const itemsToFit = document.getElementsByClassName('fitText');
+            for (const item in itemsToFit) {
+                if (Object.hasOwnProperty.call(itemsToFit, item)) {
+                    const element = itemsToFit[item];
+                    fitElement(element, 1, 1000);
+                    element.classList.remove('fitText');
+                }
+            }
+        }
+
+        function fitElement(element, start, end) {
+
+            let size = (end + start) / 2;
+            element.style.fontSize = `${size}px`;
+
+            if (Math.abs(start - end) < 1) {
+                while (element.scrollHeight > element.offsetHeight) {
+                    size--;
+                    element.style.fontSize = `${size}px`;
+                }
+                return;
+            }
+
+            if (element.scrollHeight > element.offsetHeight) {
+                fitElement(element, start, size);
+            } else {
+                fitElement(element, size, end);
+            }
+        }
+
+        document.onreadystatechange = () => {
+            fitElements();
+            if (document.readyState === 'complete') {
+                if (pageInIframe() && window.location.href.indexOf("?export") != -1){
+                    parent.postMessage(event.target.location.href, "app://obsidian.md");
+                }
+                if (window.location.href.indexOf("print-pdf") != -1){
+                    let stateCheck = setInterval(() => {
+                        clearInterval(stateCheck);
+                        window.print();
+                    }, 250);
+                }
+            }
+        };
+    </script>
+</head>
+
+<body>
+    <div class="reveal">
+        <div class="slides"><section  data-markdown><script type="text/template"><!-- .slide: class="titleslide drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+# GitLab
+
+### Grundlagen und GitLab DevOps
+
+Dr.-Ing. Grigory Devadze
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Was Sie mitnehmen
+
+- &shy;<!-- .element: class="fragment" data-fragment-index="1" -->**Einordnen:** CI, Delivery und Deployment unterscheiden. 
+- &shy;<!-- .element: class="fragment" data-fragment-index="2" -->**Zusammenarbeiten:** Änderungen mit Git und Merge Requests integrieren. 
+- &shy;<!-- .element: class="fragment" data-fragment-index="3" -->**Automatisieren:** Pipelines gezielt auslösen und strukturieren. 
+- &shy;<!-- .element: class="fragment" data-fragment-index="4" -->**Absichern:** Variablen, Daten und Runner-Rechte passend begrenzen. 
+- &shy;<!-- .element: class="fragment" data-fragment-index="5" -->**Nachweisen:** Tests, Berichte und Container reproduzierbar bereitstellen. 
+
+<div class="fragment" data-fragment-index="6">
+
+Alle Teile arbeiten an derselben kleinen Änderung: Ein PowerShell-Skript soll Dateien **nach Namen sortiert** ausgeben. Am Ende ist nachvollziehbar, welcher Auftrag, welcher Code, welcher Test und welches Artifact zusammengehören.
+
+</div>
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Agenda
+
+<div class="agenda">
+
+1. GitLab im Entwicklungszyklus <!-- .element: class="fragment" data-fragment-index="1" -->
+2. Git und Projektstruktur <!-- .element: class="fragment" data-fragment-index="2" -->
+3. Branching und Zusammenarbeit <!-- .element: class="fragment" data-fragment-index="3" -->
+4. Die erste Pipeline <!-- .element: class="fragment" data-fragment-index="4" -->
+5. Pipeline-Steuerung <!-- .element: class="fragment" data-fragment-index="5" -->
+6. Secrets und Pipeline-Daten <!-- .element: class="fragment" data-fragment-index="6" -->
+7. Runner, Container und Tests <!-- .element: class="fragment" data-fragment-index="7" -->
+8. Auto DevOps und Transfer <!-- .element: class="fragment" data-fragment-index="8" -->
+
+</div>
+</div></script></section><section ><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" data-background-color="#183b66" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+# Teil I · GitLab im Entwicklungszyklus
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Lernziele Teil I
+
+- &shy;<!-- .element: class="fragment" data-fragment-index="1" -->Unterscheiden, was Git erledigt und was GitLab ergänzt. 
+- &shy;<!-- .element: class="fragment" data-fragment-index="2" -->CI, Continuous Delivery und Continuous Deployment daran unterscheiden, **wer die Auslieferung freigibt**. 
+- &shy;<!-- .element: class="fragment" data-fragment-index="3" -->Für eine Änderung festlegen, welcher Test sie absichert. 
+
+<div class="fragment" data-fragment-index="4">
+
+Zuerst klären wir, was das Skript künftig tun soll. Danach sehen wir, welche Werkzeuge dabei helfen.
+
+</div>
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Beispielanforderung: sortierte Dateiliste
+
+Unser Kursprojekt heißt **Banana Project**. Sein Skript `ListFiles.ps1` gibt alle Dateien eines Verzeichnisses mit ihrer Größe aus.
+
+<div class="ist-soll">
+<div>
+
+**Heute:** Reihenfolge, wie das Dateisystem sie liefert
+
+```text
+beta.txt - 2 Bytes
+alpha.txt - 1 Bytes
+```
+
+</div>
+<div>
+
+**Gewünscht:** aufsteigend nach Dateinamen, Format unverändert
+
+```text
+alpha.txt - 1 Bytes
+beta.txt - 2 Bytes
+```
+
+</div>
+</div>
+
+<div class="fragment" data-fragment-index="1">
+
+**Aufgabe des Teams:**
+
+</div>
+
+1. Skript ändern, sodass es nach Namen sortiert. <!-- .element: class="fragment" data-fragment-index="2" -->
+2. Test ergänzen, der die Reihenfolge prüft. <!-- .element: class="fragment" data-fragment-index="3" -->
+3. Geprüften Stand als Artifact übergeben. <!-- .element: class="fragment" data-fragment-index="4" -->
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Git und GitLab: Aufgabenteilung
+
+| Git | GitLab |
+|---|---|
+| Speichert Dateistände und ihre Historie. | Stellt das Repository dem Team bereit. |
+| Läuft lokal, auch ohne Server. | Ergänzt Issues, Merge Requests und Pipelines. |
+| Verwaltet Commits, Branches und Remotes. | Regelt Zugriffsrechte, Reviews und automatische Jobs. |
+
+Einen Commit können Sie lokal ohne GitLab anlegen. Issues und Review-Kommentare liegen dagegen nur in GitLab: `git clone` lädt sie nicht mit herunter.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Weg einer Änderung vom Issue zum Artifact
+
+<img src="figs/entwicklungszyklus.png" alt="Änderung über Issue, Code und Review zum geprüften Artifact; Feedback wird erneut geplant." style="object-fit: scale-down">
+
+
+Jeder Schritt klärt eine Frage: **Brauchen wir das? Ist es verständlich? Sind die Tests grün? Darf es raus?** Review und Pipeline laufen oft mehrfach.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Bausteine eines GitLab-Projekts
+
+| Baustein | Beispiel im Banana Project |
+|---|---|
+| **Issue** | „Dateiliste nach Namen sortieren“ |
+| **Repository** | `ListFiles.ps1` und zugehörige Tests |
+| **Merge Request** | Die Codeänderung mit den Review-Kommentaren |
+| **Pipeline** | Ergebnisse von Lint, Test und ZIP-Erzeugung |
+| **Artifact** | Das ZIP, das ein Job erzeugt hat |
+
+Das Repository speichert den Quellcode mit seiner Historie. Das Artifact ist **nur eine Datei, die ein Job daraus erzeugt hat**.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Continuous Integration
+
+**Definition:** Das Team führt seine Änderungen oft, meist mehrmals täglich, im gemeinsamen Branch zusammen. Build und Tests laufen dabei automatisch und melden, ob noch alles funktioniert.
+
+**Im Beispiel:** Die Sortieränderung ist klein. Sie wird reviewt, in `main` übernommen und dort zusammen mit den Änderungen der anderen getestet.
+
+**Kein CI:** Ein Branch bleibt wochenlang getrennt und wird jeden Tag gebaut. Mit der Arbeit der anderen wird er aber erst spät zusammengeführt.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Lint, Test und Package
+
+| Prüfung | Was sie im Beispiel prüft | Was sie nicht prüft |
+|---|---|---|
+| **Lint** | Hält der PowerShell-Code die eingestellten Regeln ein? | Ist die Ausgabe richtig sortiert? |
+| **Test** | Die Fälle, die im Test stehen | Fälle, die niemand geschrieben hat |
+| **Package** | Liegen die vorgesehenen Dateien im ZIP? | Arbeitet das Skript fachlich richtig? |
+
+Ein grüner Haken sagt nur, dass diese eine Prüfung bestanden ist. **Was geprüft wurde, steht im Job**, nicht in seinem Namen.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Continuous Delivery
+
+**Definition:** Build, Tests und ZIP-Erzeugung laufen automatisch. Am Ende liegt ein Stand bereit, der jederzeit ausgeliefert werden kann. Ob er in Produktion geht, **entscheidet ein Mensch**.
+
+**Im Beispiel:** Das Artifact ist gebaut und getestet. Erst wenn eine berechtigte Person es freigibt, wird es in die Zielumgebung ausgeliefert.
+
+**Noch kein Deployment:** Das ZIP liegt nur in GitLab. Auf dem Zielsystem hat sich nichts geändert.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Continuous Deployment
+
+**Definition:** Jede Änderung, die alle Prüfungen besteht, geht automatisch in Produktion. Niemand gibt sie vorher noch einmal frei.
+
+Der Unterschied zu Delivery: **Gibt vor der Produktion noch ein Mensch frei?** Ob ein Job `deploy` heißt, spielt dafür keine Rolle.
+
+**Im Beispiel:** Fehlt der Test für die Sortierung, geht eine falsch sortierte Liste direkt in Produktion. Bei automatischer Auslieferung müssen die Tests deshalb alles prüfen, was sonst ein Mensch vor der Freigabe prüfen würde.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Delivery und Deployment im Vergleich
+
+| | Continuous Delivery | Continuous Deployment |
+|---|---|---|
+| Build und Tests laufen automatisch | Ja | Ja |
+| Wer entscheidet über die Auslieferung? | Ein Mensch | Die Pipeline |
+| Ergebnis am Ende | Artifact wartet auf Freigabe | Artifact läuft in Produktion |
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Aussagekraft eines grünen Tests
+
+Angenommen, der Test legt nur eine Datei an und erwartet diese Ausgabe:
+
+```text
+banana.txt - 6 Bytes
+```
+
+Der Test prüft Namen und Größe, aber **nicht die Reihenfolge**. Er bliebe auch grün, wenn das Skript absteigend sortiert.
+
+Erst ein Test mit zwei Dateien erkennt eine falsche Reihenfolge. „Alle Tests erfolgreich“ heißt nur: Die Fälle, die jemand geschrieben hat, sind bestanden.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Entscheidungen und Verantwortliche
+
+| Frage | Wer entscheidet |
+|---|---|
+| Was soll sich ändern? | Auftraggeber bzw. Product Owner, zusammen mit dem Team |
+| Ist die Änderung verständlich und richtig? | Reviewer |
+| Welche Prüfungen müssen laufen? | Das Team; ein Maintainer baut sie in die Pipeline ein |
+| Darf ausgeliefert werden? | Eine benannte Person, z. B. Product Owner oder Betrieb |
+
+GitLab legt diese Zuständigkeiten nicht fest, das **vereinbart das Team**. Eine Person kann mehrere davon übernehmen.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Rückblick Teil I
+
+**Issue → Änderung → Review → Test → Freigabe:** An jedem Schritt prüft jemand etwas anderes.
+
+Bei CI führt das Team oft zusammen und testet automatisch. Delivery und Deployment unterscheiden sich darin, ob vor der Produktion ein Mensch freigibt.
+
+**Transfer:** Das Artifact ist grün, aber die Liste ist falsch sortiert. Welcher Test fehlt?
+
+Im nächsten Teil geht es darum, **welche lokalen Dateien Git speichert und zu GitLab überträgt**.
+</div></script></section></section><section ><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" data-background-color="#183b66" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+# Teil II · Git und Projektstruktur
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Lernziele Teil II
+
+- &shy;<!-- .element: class="fragment" data-fragment-index="1" -->Gruppe, Projekt, Repository: Was liegt wo? 
+- &shy;<!-- .element: class="fragment" data-fragment-index="2" -->Am Diff sehen: Working Tree, Index oder Commit? 
+- &shy;<!-- .element: class="fragment" data-fragment-index="3" -->Änderungen auswählen, committen und zu GitLab pushen. 
+- &shy;<!-- .element: class="fragment" data-fragment-index="4" -->Die Änderung in Issue, Label, Milestone und README beschreiben. 
+
+<div class="fragment" data-fragment-index="5">
+
+Beispiel bleibt die Sortierung in `ListFiles.ps1`. Git speichert, was sich an der Datei ändert. Issue und Co. sagen, **warum**.
+
+</div>
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Gruppe, Projekt, Repository
+
+| Ebene | Enthält | Beispiel |
+|---|---|---|
+| **Gruppe** | Mitglieder, Untergruppen, Projekte | `team` |
+| **Projekt** | Repository, Issues, MRs, Pipelines | `team/banana` |
+| **Repository** | Dateien und ihre Historie | `ListFiles.ps1`, Tests, README |
+
+Ein Projekt umfasst mehr als das Repository. Ihr lokaler Ordner darf anders heißen als der Pfad in GitLab.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Geerbte Mitgliedschaft
+
+**Beispiel:** Jemand ist Developer in der Gruppe `team`. Das Projekt `banana` liegt in dieser Gruppe.
+
+| Was Sie ändern | Was passiert |
+|---|---|
+| Person direkt aus dem Projekt nehmen | Zugriff über die Gruppe bleibt |
+| Mitgliedschaft in der Gruppe `team` ändern | Ändert den Zugriff über die Gruppe |
+
+Bei unerwarteten Rechten reicht der Blick ins Projekt nicht. Prüfen Sie **direkte, geerbte und geteilte Mitgliedschaften** einzeln.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Sichtbarkeit, Rolle und Branch-Regel
+
+| Frage | Regelt |
+|---|---|
+| Wer kann das Projekt sehen? | Sichtbarkeit und Mitgliedschaft |
+| Was darf die Person tun? | Ihre Rolle in Gruppe oder Projekt |
+| Darf sie direkt auf `main` pushen? | Schutzregeln für den Branch |
+
+**Privat** hält nur Außenstehende fern. Wer im Team was darf und wie Code nach `main` kommt, regeln Sie extra.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Rollen von Guest bis Owner
+
+| Rolle | Darf typischerweise |
+|---|---|
+| **Guest** | Mitdiskutieren; in privaten Repositories standardmäßig keinen Code sehen |
+| **Reporter** | Code und Projekt lesen |
+| **Developer** | Code ändern |
+| **Maintainer** | Projekt einstellen, Branches schützen |
+| **Owner** | Volle Kontrolle über Gruppe oder Projekt |
+
+Es gibt weitere Rollen und Sonderrechte. Ob eine Aktion erlaubt ist, regeln **Rechtetabelle, Ebene und Projektregeln**.
+
+[GitLab: Roles and permissions](https://docs.gitlab.com/user/permissions/)
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Commit: Projektstand mit ID und Vorgänger
+
+<img src="figs/git-commit-kette.png" alt="Drei Commits A, B und C; jeder verweist auf seinen Vorgänger." style="object-fit: scale-down">
+
+
+Ein Commit speichert den Stand **aller Dateien, die Git verfolgt**, dazu Autor, Zeit, Nachricht und seinen Vorgänger. Danach ändert er sich nie mehr.
+
+Aus diesem Inhalt berechnet Git die **Commit-ID**, hier auf sieben Zeichen gekürzt. Gleiche ID auf Ihrem Rechner und in GitLab heißt: gleicher Stand.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="fig-mid drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Branch und HEAD als Zeiger
+
+<img src="figs/git-branch-zeiger.png" alt="HEAD zeigt auf main, main auf Commit C; nach dem nächsten Commit zeigt main auf D." style="object-fit: scale-down">
+
+
+Ein Branch ist ein **Name, der auf einen Commit zeigt**, hier `main` auf C. `HEAD` zeigt auf den Branch, mit dem Sie gerade arbeiten.
+
+Ihr nächster Commit D bekommt C als Vorgänger, und `main` rückt auf D vor. A, B und C bleiben, wie sie sind.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="fig-mid drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## `origin/main`: Stand von GitLab auf Ihrem Rechner
+
+<img src="figs/git-origin-main.png" alt="Lokal zeigen main und origin/main auf A, in GitLab steht main schon auf C." style="object-fit: scale-down">
+
+
+`origin/main` ist Ihre **lokale Kopie** des Branches `main` in GitLab. Git aktualisiert sie nur, wenn Sie mit GitLab sprechen: bei `fetch`, `pull` und `push`.
+
+Im Bild hat jemand B und C nach GitLab gepusht. Ihr Rechner weiß davon nichts, bis Sie den Stand holen.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="fig-mid drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Zusammenführen: Fast-forward oder Merge-Commit
+
+<img src="figs/git-zusammenfuehren.png" alt="Links rückt main ohne neuen Commit von A auf C vor. Rechts verbindet der Merge-Commit M die Commits B und C." style="object-fit: scale-down">
+
+
+Hat Ihr Branch keine eigenen neuen Commits, rückt der Name einfach vor: **Fast-forward**. Nur das lässt `git pull --ff-only` zu.
+
+Haben beide Seiten neue Commits, entsteht ein **Merge-Commit** mit zwei Vorgängern. Ändern beide dieselbe Stelle, gibt es dabei einen Konflikt.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Arbeitszyklus mit Git und GitLab
+
+<img src="figs/git-arbeitszyklus.png" alt="Branch anlegen, ändern, mit add auswählen, mit commit speichern, mit push hochladen, Merge Request in GitLab; danach holt pull den neuen main." style="object-fit: scale-down">
+
+
+Jede Änderung geht diesen Weg. Die folgenden Folien zeigen die Befehle dazu einzeln, zuerst `add` und `commit`.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Working Tree, Index und Commit
+
+<img src="figs/git-bereiche.png" alt="Working Tree, Index und lokale Historie sind vom GitLab-Remote getrennt." style="object-fit: scale-down">
+
+
+**Ein Commit speichert nur, was im Index liegt.** Änderungen nur im Working Tree fehlen darin. Bei GitLab ist noch nichts angekommen.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Diff der Sortieränderung
+
+Die entscheidende Stelle in `ListFiles.ps1`:
+
+```diff
+ Get-ChildItem -LiteralPath $Path -File -ErrorAction Stop |
++    Sort-Object -Property Name |
+     ForEach-Object { '{0} - {1} Bytes' -f $_.Name, $_.Length }
+```
+
+Welche Dateien und in welchem Format: bleibt gleich. Neu ist nur: **Das Skript sortiert nach Namen**.
+
+Der Diff zeigt, was sich geändert hat. Ob die Ausgabe wirklich sortiert ist, muss ein Test zeigen.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## `git status --short`: die zwei Spalten
+
+Beispielausgabe (ohne Merge-Konflikt):
+
+```text
+ M ListFiles.ps1
+M  README.md
+?? notes.txt
+```
+
+**Spalte 1:** Index vs. letzter Commit. **Spalte 2:** Working Tree vs. Index.
+
+Die Änderung am Skript liegt noch nicht im Index, die am README schon. `notes.txt` kennt Git noch gar nicht.
+
+```bash
+git status --short
+```
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## `git diff` und `git diff --staged`
+
+```bash
+git diff -- ListFiles.ps1
+git diff --staged -- ListFiles.ps1
+```
+
+| Befehl | Vergleich | Frage |
+|---|---|---|
+| `git diff` | Working Tree mit Index | Was fehlt noch im Index? |
+| `git diff --staged` | Index mit letztem Commit | Was kommt in den nächsten Commit? |
+
+Nach `add` kann `git diff` leer sein, obwohl die Änderung **noch nicht committed** ist.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## `git add`
+
+```bash
+git add ListFiles.ps1
+git diff --staged -- ListFiles.ps1
+git status --short
+```
+
+| `ListFiles.ps1` | Vor `add` | Nach `add` |
+|---|---|---|
+| Kurzstatus | ` M` | `M ` |
+| Sortierzeile liegt im Index | Nein | Ja |
+
+Einzeln hinzufügen hält Fremdes aus dem Commit. `add` legt die Datei **so, wie sie jetzt ist**, in den Index. Ändern Sie danach weiter, ist ein neues `add` nötig.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Index und Working Tree derselben Datei
+
+Angenommen, Sie ändern die Sortierzeile nach `add` noch einmal:
+
+| Bereich | Sortierzeile |
+|---|---|
+| Letzter Commit | Noch keine Sortierung |
+| Index | `Sort-Object -Property Name` |
+| Working Tree | `Sort-Object -Property Name -Descending` |
+
+```text
+MM ListFiles.ps1
+```
+
+Ohne neues `add` speichert der Commit die **aufsteigende** Fassung. `-Descending` bleibt nur im Working Tree. Prüfen Sie deshalb vor dem Commit beide Diffs.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## `git commit`
+
+```bash
+git commit -m "feat: sortiere Dateiliste nach Namen"
+git log -1 --oneline
+```
+
+Der Commit speichert den Inhalt des Index, dazu Vorgänger, Autor und Zeit. Er liegt **nur lokal** und ist noch nicht bei GitLab.
+
+Der Betreff sagt, was sich ändert, die Beschreibung bei Bedarf, warum. `feat:` ist eine Absprache im Team, Git verlangt das nicht.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Historie lesen: `log`, `show`, `diff`
+
+```bash
+git log --oneline -5
+git show HEAD -- ListFiles.ps1
+git diff HEAD~1 HEAD -- ListFiles.ps1
+```
+
+- &shy;<!-- .element: class="fragment" data-fragment-index="1" -->`log` listet die Commits auf. 
+- &shy;<!-- .element: class="fragment" data-fragment-index="2" -->`show` zeigt einen Commit samt Änderungen. 
+- &shy;<!-- .element: class="fragment" data-fragment-index="3" -->`diff` vergleicht zwei Commits. 
+
+<div class="fragment" data-fragment-index="4">
+
+`HEAD` ist der Commit, auf dem Sie gerade stehen, `HEAD~1` sein Vorgänger. Fehlt der, etwa in einem neuen Repository, scheitert der Vergleich.
+
+</div>
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## `.gitignore`
+
+Beispiel für `.gitignore`:
+
+```gitignore
+dist/
+TestResults/
+git-summary.txt
+```
+
+Die Regeln wirken nur auf Dateien, **die Git noch nicht verfolgt**. Ein schon committeter Report bleibt drin, ein committetes Geheimnis bleibt in der Historie.
+
+Die Pipeline kann ein ignoriertes ZIP trotzdem bauen und als Artifact weitergeben. Ins Repository muss es dafür nicht.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## `git restore --staged`
+
+```bash
+git restore --staged ListFiles.ps1
+git status --short
+git diff -- ListFiles.ps1
+```
+
+Git nimmt die Datei wieder aus dem Index (zurück auf den letzten Commit). **Ihre Änderung im Working Tree bleibt.**
+
+Vorsicht: `git restore ListFiles.ps1` ohne `--staged` überschreibt die Datei im Working Tree mit dem Indexstand. Was nicht im Index lag, ist weg.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## `git clone`
+
+Beispieladresse, nicht unser GitLab:
+
+```bash
+git clone https://gitlab.example.org/team/banana.git
+cd banana
+git remote -v
+```
+
+`git clone` lädt das Repository herunter und richtet `origin` als Remote ein. Branches und Historie kommen mit. Issues und Review-Kommentare bleiben in GitLab.
+
+`origin` ist nur der übliche Name für ein Remote. Ob dort der offizielle Stand des Teams liegt, verrät der Name nicht.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="fig-small drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## `git fetch`
+
+```bash
+git fetch origin
+git log --oneline HEAD..origin/main
+```
+
+<img src="figs/git-fetch-nachher.png" alt="Nach fetch zeigt origin/main lokal auf C, main bleibt auf A." style="object-fit: scale-down">
+
+
+`fetch` lädt B und C herunter und setzt `origin/main` auf C. Ihr `main` und Ihre Dateien bleiben auf A. `git log` listet die Commits, die in `origin/main` sind, in `HEAD` aber noch nicht.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## `git pull --ff-only`
+
+Wenn `main` keine offenen Änderungen hat und `origin` folgt:
+
+```bash
+git switch main
+git pull --ff-only
+```
+
+`pull` holt Commits und baut sie ein. `--ff-only` aktualisiert nur, wenn Ihr `main` keine eigenen Commits hat, die im Remote fehlen.
+
+Haben beide Seiten neue Commits, bricht der Befehl ab. Schauen Sie dann in die Historie und **wählen Sie Merge oder Rebase**, statt etwas zu erzwingen.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## `git push`
+
+Angenommen, Sie haben den Branch `feature/dateiliste` schon lokal:
+
+```bash
+git push -u origin feature/dateiliste
+git branch -vv
+```
+
+Der erste Push legt den Branch in GitLab an. `-u` verknüpft ihn mit Ihrem lokalen Branch. Danach überträgt `git push` nur neue Commits.
+
+**Ein Push bringt nichts nach `main`.** Dafür gibt es den vereinbarten Weg, zum Beispiel einen Merge Request.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Diagnose: Push abgelehnt
+
+| Meldung | Möglicher Grund | Was Sie prüfen |
+|---|---|---|
+| Authentifizierung abgelehnt | Falsches Remote oder falscher Account | Remote-URL und Anmeldedaten |
+| `non-fast-forward` | Remote hat neue Commits | `fetch`, dann Historie vergleichen |
+| Geschützter Branch | Kein Pushrecht für diesen Branch | Zielbranch und Schutzregel |
+
+Ein Force-Push hilft weder bei fehlenden Rechten noch bei inhaltlichen Fragen. Er kann Commits im Remote überschreiben: **keine Standardlösung**.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Web Editor und Web IDE
+
+**Wozu:** Dateien direkt in GitLab ändern, ohne Clone und ohne lokales Git.
+
+| Web Editor | Web IDE |
+|---|---|
+| Einzelne Datei bearbeiten | Mehrere Dateien zusammen bearbeiten |
+| Kleiner README-Fix | Code, Test und README gemeinsam ändern |
+| Änderung committen | Änderungen auswählen und committen |
+
+Jede Änderung im Browser ist ein normaler Commit, mit Branch und Review wie lokal. Tests laufen dort nicht: Pester startet erst in der Pipeline.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Issue zur Sortieränderung
+
+<img src="figs/issue-sortierung.png" alt="Issue „Dateiliste nach Namen sortieren“ in GitLab mit Problem, Ziel und Akzeptanzkriterien als Checkliste." style="object-fit: scale-down">
+
+
+Die Ausgabe war bisher nicht unbedingt falsch sortiert. Neu ist: **Die Reihenfolge ist jetzt festgelegt**.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Labels und Scoped Labels
+
+| Normales Label | Bedeutung bei uns |
+|---|---|
+| `bug` | Skript tut nicht, was es soll |
+| `documentation` | Beschreibung oder Beispiele ändern |
+| `ready-for-review` | Laut Teamabsprache bereit fürs Review |
+
+Die Namen legt das Team fest, GitLab gibt sie nicht vor. Ein Issue kann mehrere normale Labels tragen. Die gibt es in **Free**.
+
+**Scoped Labels** wie `workflow::ready` schließen sich gegenseitig aus und brauchen **Premium / Ultimate**.
+
+[GitLab: Scoped labels](https://docs.gitlab.com/user/project/labels/#scoped-labels)
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Milestones
+
+**Beispiel:** „Dateiliste 1.0“
+
+| Issue im Milestone | Wozu |
+|---|---|
+| Sortierung festlegen | Klären, was das Skript tun soll |
+| Skript und Test ändern | Sortieren einbauen und testen |
+| README aktualisieren | Verhalten erklären |
+
+Ein Projekt-Milestone sammelt Issues eines Projekts, ein Gruppen-Milestone auch aus mehreren. Schließen Sie einen Milestone, **bleiben seine offenen Issues offen**.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Issue und Merge Request verknüpfen
+
+Beispiel für die MR-Beschreibung:
+
+```markdown
+Sortiert die Dateiliste aufsteigend nach Namen.
+Closes #12
+```
+
+Das Issue sagt **warum**, der MR zeigt **wie**, dort läuft das Review.
+
+`Closes #12` schließt das Issue, sobald der MR in den Default-Branch gemergt wird. Voraussetzung: Automatisches Schließen ist an, und wer mergt, darf das Issue schließen.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## README des Banana Project
+
+```markdown
+# Banana Project
+
+ListFiles.ps1 gibt die Dateien des gewählten Verzeichnisses aus.
+Jede Zeile enthält Dateiname und Größe in Bytes.
+Die Ausgabe ist aufsteigend nach Dateinamen sortiert.
+```
+
+`-Path` gibt das Verzeichnis an. Ohne `-Path` nimmt das Skript `.`.
+
+Steht die Sortierung nur im README, sortiert das Skript noch nicht. **README, Skript und Test** müssen dasselbe sagen.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Ein Thema pro Änderung
+
+So soll `ListFiles.ps1` danach aussehen:
+
+```powershell
+Get-ChildItem -LiteralPath $Path -File -ErrorAction Stop |
+    Sort-Object -Property Name |
+    ForEach-Object { '{0} - {1} Bytes' -f $_.Name, $_.Length }
+```
+
+Geändert wird nur die Reihenfolge. Format, Dateiauswahl und Fehlerbehandlung bleiben, wie sie sind.
+
+Test und README zur Sortierung gehören dazu. Wollen Sie nebenbei umbauen, machen Sie dafür eine eigene Änderung: Sonst wird das Review mühsam.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Rückblick Teil II
+
+| Sie sehen | Offene Frage |
+|---|---|
+| Skript bearbeitet | Ist der richtige Stand im Index? |
+| Commit lokal da | Ist er im richtigen Remote angekommen? |
+| Code in GitLab | Sagen Issue, README und Test dasselbe? |
+
+**Transfer:** Ihr Commit ist lokal da, aber in GitLab nicht zu sehen. Welcher Schritt fehlt noch?
+
+Jetzt arbeiten mehrere mit: **Was passiert, wenn andere `main` ändern, während wir arbeiten?**
+</div></script></section></section><section ><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" data-background-color="#183b66" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+# Teil III · Branching und Zusammenarbeit
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Lernziele Teil III
+
+- &shy;<!-- .element: class="fragment" data-fragment-index="1" -->Ein Branch- und Release-Modell wählen, das zu Ihrem Projekt passt. 
+- &shy;<!-- .element: class="fragment" data-fragment-index="2" -->Unterscheiden: Wer darf pushen, wer darf mergen, wer gibt fachlich frei? 
+- &shy;<!-- .element: class="fragment" data-fragment-index="3" -->Einen Konflikt gemeinsam inhaltlich klären und auflösen. 
+- &shy;<!-- .element: class="fragment" data-fragment-index="4" -->Die Sortieränderung reviewen: Was zeigen Test und Diff? 
+
+<div class="fragment" data-fragment-index="5">
+
+Ein Merge ohne Konflikt heißt nur: Git konnte die Änderungen zusammenführen. **Ob Text und Sortierung stimmen**, prüfen Sie selbst.
+
+</div>
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="fig-mid drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Zwei Branches mit gemeinsamer Vorgeschichte
+
+<img src="figs/git-branches-verzweigt.png" alt="feature/dateiliste zeigt auf B, main auf C; beide bauen auf A auf." style="object-fit: scale-down">
+
+
+Erst zeigen beide Namen auf A. Dann committen Sie die Sortierung B, eine Kollegin ergänzt auf `main` die README in C.
+
+Im Working Tree sehen Sie den ausgecheckten Branch. Ein Branch legt **keinen zweiten Projektordner** an.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Feature-Branch anlegen: `git switch -c`
+
+Sauber starten:
+
+```bash
+git switch main
+git pull --ff-only
+git switch -c feature/dateiliste
+git branch --show-current
+```
+
+Damit starten Sie auf dem aktuellen `main`. Während Sie arbeiten, kommen dort neue Commits dazu. Im Feature-Branch liegt **nur Ihre Änderung**. Beim Zusammenführen kann es trotzdem später Konflikte geben.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Git Flow
+
+<img src="figs/git-flow.png" alt="Git Flow mit den Spuren main, hotfix, release, develop und feature; Features laufen über develop, Releases und Hotfixes landen auf main." style="object-fit: scale-down">
+
+
+Git Flow ist eine **Absprache im Team**, keine Git-Funktion. Je mehr Branchtypen, desto mehr muss das Team regeln: Was wird wohin gemergt?
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="fig-xs drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## GitLab Flow
+
+<img src="figs/git-gitlab-flow.png" alt="Feature-Branches kommen per MR nach main; optionale Branches test und production übernehmen Änderungen nur von main aus." style="object-fit: scale-down">
+
+
+Feature-Branches zweigen von `main` ab. Ein Merge Request bündelt Code, Issue, Diskussion und Review.
+
+Optional kommen weitere Branches hinzu. Für jeden legen Sie fest, was von wo nach wo gemergt wird:
+
+- &shy;<!-- .element: class="fragment" data-fragment-index="1" -->**Environment-Branches:** je ein Branch pro Umgebung (z. B. Test, Produktion). 
+- &shy;<!-- .element: class="fragment" data-fragment-index="2" -->**Release-Branches:** mehrere Produktversionen parallel pflegen.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="fig-small drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Trunk-Based Development
+
+<img src="figs/git-trunk-based.png" alt="Kurze Branches zweigen von main ab und kommen nach wenigen Commits zurück." style="object-fit: scale-down">
+
+
+Alle mergen in einen gemeinsamen Branch, meist `main`. Änderungen bleiben klein, Feature-Branches leben nur kurz und werden schnell zurückgemergt.
+
+Dafür braucht es automatische Tests und schnelles Review.
+
+Trunk-Based heißt **nicht automatisch: direkt pushen ohne Prüfung**. Eine formale Freigabe passt auch zu kurzen Zyklen.
+
+[GitLab: Trunk-based development with short-lived branches](https://about.gitlab.com/topics/version-control/)
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Auswahl der Branching-Strategie
+
+| Situation | Was das Team regeln muss |
+|---|---|
+| Mehrere Versionen gleichzeitig pflegen | Wege für Releases und Hotfixes festlegen |
+| Eigener Stand pro Umgebung | Wer bringt was in welche Umgebung? |
+| Kleine Änderungen häufig mergen | Review und Tests müssen schnell sein |
+
+Für unsere eine Sortieränderung reicht ein kurzer Branch mit MR. Für ein anderes Produkt kann eine andere Strategie besser passen.
+
+**Branching-Strategie, Merge-Methode und Freigabe für Produktion sind drei getrennte Entscheidungen.**
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Protected Branches: Einstellungen
+
+| Einstellung | Regelt |
+|---|---|
+| **Allowed to merge** | Wer über einen Merge Request mergen darf |
+| **Allowed to push and merge** | Wer direkt pushen und mergen darf |
+| **Allowed to force push** | Wer den geschützten Branch umschreiben darf |
+
+Branch-Schutz nach Rollen gibt es in **Free**. Ob Developer oder nur Maintainer mergen dürfen, steht in der Regel selbst. „Protected“ allein sagt das nicht.
+
+[GitLab: Protected branches](https://docs.gitlab.com/user/project/repository/branches/protected/)
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Direkten Push auf `main` sperren
+
+Beispiel: Änderungen kommen nur per MR auf `main`.
+
+| Einstellung | Gewählter Wert |
+|---|---|
+| Allowed to merge | **Developers + Maintainers** |
+| Allowed to push and merge | **No one** |
+| Allowed to force push | Deaktiviert |
+
+**„Nicht konfiguriert“ ist nicht dasselbe wie „No one“.** Weitere Regeln (Wildcard, Gruppe) können zusätzliche Rechte geben. Entscheidend ist, was alle Regeln zusammen erlauben.
+
+[GitLab: Push and merge permissions](https://docs.gitlab.com/user/project/repository/branches/protected/#push-and-merge-permissions)
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Parallele Änderungen und Merge-Konflikte
+
+Ändern zwei Branches verschiedene Stellen, führt Git das meist selbst zusammen. Ändern beide dieselbe Stelle, müssen Sie entscheiden.
+
+**Beispiel:** Beide Branches ersetzen dieselbe README-Zeile:
+
+| Feature-Branch | Inzwischen geänderter `main` |
+|---|---|
+| „Ausgabe nach Namen sortiert“ | „Ausgabe enthält Größen in Bytes“ |
+
+Beide Zeilen sind richtig. Git weiß nicht, was in der README stehen soll. Umgekehrt kann ein **Merge ohne Konflikt inhaltlich falsch** sein.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Konflikt im Feature-Branch: `git merge origin/main`
+
+```bash
+git switch feature/dateiliste
+git fetch origin
+git merge origin/main
+git status
+```
+
+Mögliche Ausgabe:
+
+```text
+CONFLICT (content): Merge conflict in README.md
+```
+
+Hier holen wir den aktuellen `main` **in den Feature-Branch**. `main` selbst bleibt dabei unverändert.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Konfliktmarker in der Datei
+
+Bei diesem Merge steht `HEAD` für den aktuellen Feature-Branch:
+
+```text
+<<<<<<< HEAD
+Ausgabe nach Namen sortiert.
+=======
+Ausgabe enthält Größen in Bytes.
+>>>>>>> origin/main
+```
+
+Zwischen den Markern steht der Konflikt. Nicht einfach eine Seite übernehmen, sondern fragen: **Was muss am Ende in der README stehen?**
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Konflikt auflösen: `git add` und Commit
+
+Gemeinsam vereinbarter README-Text:
+
+```markdown
+Ausgabe aufsteigend nach Namen sortiert;
+Größen werden in Bytes angegeben.
+```
+
+```bash
+git add README.md
+git diff --staged
+git commit -m "merge: integriere aktuellen main"
+```
+
+`add` markiert den Konflikt als gelöst. Ob Text und Skript stimmen, prüft Git nicht. **Tests und Review müssen zeigen, dass beides erfüllt ist.**
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Merge und Rebase im Vergleich
+
+| Merge | Rebase |
+|---|---|
+| Führt zwei Branches zusammen | Setzt eigene Commits auf neue Basis |
+| Commits behalten ihre IDs | Commits bekommen neue IDs |
+| Kann einen Merge-Commit erzeugen | Ergibt eine gerade Historie |
+
+Merge behält die Historie, Rebase schreibt sie neu. Schon gepushte Commits schreiben Sie nur um, **wenn das Team das abgesprochen hat**. Andere könnten darauf aufbauen.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Merge Request: Source, Target, Diff, Review
+
+Für unsere Änderung:
+
+| Feld | Bedeutung |
+|---|---|
+| **Source** | `feature/dateiliste` mit der Sortieränderung |
+| **Target** | `main`, dorthin soll sie |
+| **Diff** | Was sich gegenüber `main` ändert |
+| **Review** | Diskussion und Entscheidung zur Änderung |
+
+Jeder neue Push auf den Source-Branch aktualisiert den MR. **MR ohne Merge schließen: Kein Code landet in `main`.**
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## MR-Beschreibung
+
+```markdown
+## Änderung
+Sortiert ListFiles.ps1 aufsteigend nach Namen.
+Closes #12
+
+## Nachweis
+Test mit mehreren Dateinamen ergänzt.
+Bytezahlen und Ausschluss von Verzeichnissen bleiben erhalten.
+
+## Offener Punkt
+Welche Sortierregeln sollen für Umlaute gelten?
+```
+
+Ein konkret genannter Test sagt mehr als „alles grün“. Die offene Frage steht sichtbar in der Beschreibung, nicht versteckt im Diff.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Rollen im Merge Request
+
+| Rolle im Review | Aufgabe |
+|---|---|
+| **Autor** | Erklärt und korrigiert die Änderung |
+| **Reviewer** | Prüft Diff, Anforderung und Tests |
+| **Assignee** | Ist für den MR zuständig |
+| **Person mit Merge-Recht** | Führt den Merge aus |
+
+Die Rollen sagen, wer was tut. Wer als Reviewer eingetragen ist, bekommt dadurch **kein Merge-Recht**. Das regeln Projektrolle und Branch-Schutz.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Review-Kommentar und Suggestion
+
+Kommentar zum Test:
+
+> Der Test verwendet nur eine Datei. So fällt eine falsche Reihenfolge nicht auf. Bitte testen Sie mit zwei verschieden benannten Dateien und prüfen Sie die erste Zeile.
+
+Der Kommentar sagt: **Was fällt auf → was folgt daraus → was soll geändert werden**.
+
+Ein Suggestion-Block schlägt eine Codeänderung direkt vor. Ob sie stimmt, entscheidet trotzdem das Review.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Sortiertest mit zwei Dateinamen
+
+Gekürzter Ausschnitt; `$listScript` und `$folder` sind schon angelegt:
+
+```powershell
+[IO.File]::WriteAllText((Join-Path $folder 'beta.txt'), 'bb')
+[IO.File]::WriteAllText((Join-Path $folder 'alpha.txt'), 'a')
+$rows = @(& $listScript -Path $folder)
+$rows | Should -HaveCount 2
+$rows[0] | Should -Be 'alpha.txt - 1 Bytes'
+$rows[1] | Should -Be 'beta.txt - 2 Bytes'
+```
+
+Mit **zwei verschiedenen Namen** fällt eine absteigende Sortierung auf. Wie Umlaute oder Groß-/Kleinschreibung sortiert werden, testen diese Namen noch nicht.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Review-Threads und Resolved
+
+Der Reviewer fragt direkt an der Zeile. Der Autor antwortet oder ergänzt den Test. Dann wird geprüft: Ist die Frage beantwortet?
+
+**Resolved** heißt: Die Diskussion ist erledigt. Es heißt nicht, dass der Code stimmt.
+
+Mit der Einstellung **All threads must be resolved** blockieren offene Threads den Merge. Ohne diese Einstellung kann trotz offener Threads gemergt werden.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Approvals nach Tier
+
+| Mechanismus | Wirkung | Tier |
+|---|---|---|
+| Optionales Approval | Zustimmung, aber kein Muss | **Free** |
+| Erforderliche Approval-Regel | Merge erst nach festgelegten Zustimmungen | **Premium / Ultimate** |
+| Code-Owner-Approval | Zustimmung pro Pfad vorgeschrieben | **Premium / Ultimate** |
+
+Auf Free kann das Team Review **fest vereinbaren**. GitLab erzwingt das Approval dann aber nicht.
+
+[GitLab: Merge request approvals](https://docs.gitlab.com/user/project/merge_requests/approvals/)
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Merge-Gates: Bedingung und Einstellung
+
+| Bedingung | Einstellung in GitLab |
+|---|---|
+| Diese Person darf mergen | Rolle und Branch-Schutz |
+| Die Pipeline muss grün sein | **Pipelines must succeed** |
+| Alle Diskussionen sind erledigt | **All threads must be resolved** |
+| Der MR ist fertig, es folgen keine Commits mehr | Nicht mehr **Draft**, sondern **Ready** |
+| Bestimmte Zustimmungen sind nötig | Approval-Regeln (je nach Lizenz) |
+
+Eine rote Pipeline blockiert den Merge nur, wenn das Projekt so eingestellt ist. Auch bei grünem Button prüfen Sie den **letzten Commit** inhaltlich selbst.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Merge-Methoden in GitLab
+
+| GitLab-Methode | Ergebnis |
+|---|---|
+| **Merge commit** | Eigener Merge-Commit |
+| **Merge commit with semi-linear history** | Merge-Commit, nur wenn Fast-Forward möglich |
+| **Fast-forward merge** | Zielbranch rückt ohne Merge-Commit vor |
+
+Alle drei gibt es in **Free**. Hat sich `main` weiterbewegt, müssen Sie eventuell aktualisieren oder rebasen. Keine Methode stellt sicher, dass **der zusammengeführte Stand** getestet wurde.
+
+[GitLab: Merge methods](https://docs.gitlab.com/user/project/merge_requests/methods/)
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Squash beim Merge
+
+Angenommen, der Source-Branch enthält drei Arbeitscommits:
+
+```bash
+git log --oneline main..feature/dateiliste
+```
+
+```text
+e4b19c2 README präzisieren
+91d07aa Sortiertest ergänzen
+3c5f2e8 Implementierung sortieren
+```
+
+**Squash** fasst sie zu einem neuen Commit auf dem Zielbranch zusammen. In GitLab ist das der Haken **Squash commits** im MR. Ob noch ein Merge-Commit dazukommt, hängt von der Merge-Methode ab.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Squash lokal: `git merge --squash`
+
+```bash
+git switch main
+git merge --squash feature/dateiliste
+git status --short
+git commit -m "feat: sortiere Dateiliste nach Namen"
+git log --oneline -2
+```
+
+`merge --squash` übernimmt die Änderungen aller drei Commits in Working Tree und Index, legt aber **keinen Commit** an. Den schreiben Sie selbst mit einer Nachricht für die ganze Änderung.
+
+Die drei Commits bleiben im Source-Branch erhalten. Für die nächste Änderung starten Sie am besten einen neuen Branch.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Code Owners: Pfadregeln
+
+Vereinfachtes Beispiel ohne Sections (**Premium / Ultimate**):
+
+```text
+*       @team/maintainer
+*.ps1   @team/powershell
+/tests/ @team/test
+```
+
+Für `ListFiles.ps1` gilt die `*.ps1`-Regel, für die Tests die `/tests/`-Regel. Bei einfachen Regeln wie diesen gewinnt die **letzte passende Regel**.
+
+Die Datei allein erzwingt kein Approval. Dafür muss der Zielbranch geschützt und Code-Owner-Approval aktiviert sein.
+
+[GitLab: Code Owners](https://docs.gitlab.com/user/project/codeowners/) · [Syntax](https://docs.gitlab.com/user/project/codeowners/reference/)
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Reviewweg auf Free
+
+1. &shy;<!-- .element: class="fragment" data-fragment-index="1" -->Der MR erklärt: Warum, was genau, welche Tests? 
+1. &shy;<!-- .element: class="fragment" data-fragment-index="2" -->Der Reviewer prüft und schreibt seine Kommentare. 
+1. &shy;<!-- .element: class="fragment" data-fragment-index="3" -->Der Autor antwortet und passt die Änderung an. 
+1. &shy;<!-- .element: class="fragment" data-fragment-index="4" -->Wer Merge-Recht hat, mergt, sobald die Merge-Checks erfüllt sind. 
+
+<div class="fragment" data-fragment-index="5">
+
+Eine Tabelle im README kann festhalten, **wer was prüft**. Das ersetzt weder die Code-Owners-Funktion noch ein Approval, das GitLab erzwingt.
+
+</div>
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="fig-tiny drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Neuer Commit nach dem Review
+
+<img src="figs/git-review-neuer-commit.png" alt="Der Reviewer hat die Commits Sortierung und Test geprüft; ein weiterer Commit kam danach und ist ungeprüft." style="object-fit: scale-down">
+
+
+- &shy;<!-- .element: class="fragment" data-fragment-index="1" -->Der Reviewer prüft die Commits „Sortierung“ und „Test“ und gibt **Approve**. 
+- &shy;<!-- .element: class="fragment" data-fragment-index="2" -->Danach pusht der Autor einen weiteren Commit in denselben Branch. Der MR zeigt ihn sofort mit an. 
+- &shy;<!-- .element: class="fragment" data-fragment-index="3" -->Das Approve gilt nur für den geprüften Stand. Der neue Commit braucht **neues Review** und eine grüne Pipeline. 
+
+<div class="fragment" data-fragment-index="4">
+
+Premium und Ultimate können Approvals bei neuen Commits automatisch zurücksetzen. Auf Free vereinbart das Team das erneute Review selbst.
+
+</div>
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Rückblick Teil III
+
+Die Branching-Strategie passt dazu, wie das Team mergt. Die Konfliktlösung erfüllt beide Anforderungen. Der MR erklärt die Änderung; Review und Tests beziehen sich auf **das, was gemergt wird**.
+
+**Transfer:** Die README hat keinen Konflikt, der MR ist approved, der Merge-Button ist grün. Welcher Test für die Sortierung könnte trotzdem fehlen?
+
+Als Nächstes lassen wir diese Prüfung **automatisch als Job laufen** und schauen auf seinen Status.
+</div></script></section></section><section ><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" data-background-color="#183b66" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+# Teil IV · Die erste Pipeline
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Lernziele Teil IV
+
+- &shy;<!-- .element: class="fragment" data-fragment-index="1" -->Pipeline, Job, Stage und Runner unterscheiden. 
+- &shy;<!-- .element: class="fragment" data-fragment-index="2" -->Eine kleine `.gitlab-ci.yml` schreiben, die ein Testskript startet. 
+- &shy;<!-- .element: class="fragment" data-fragment-index="3" -->Fehler über Status, Kommando und Log finden. 
+- &shy;<!-- .element: class="fragment" data-fragment-index="4" -->Tests, ZIP und Merge-Freigabe getrennt prüfen. 
+
+<div class="fragment" data-fragment-index="5">
+
+Leitfrage: **Woran sehen wir, dass die neue Sortierung getestet wurde?**
+
+</div>
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## `.gitlab-ci.yml` und der getestete Commit
+
+GitLab liest **`.gitlab-ci.yml`** im Repository-Root. Die Datei legt Jobs und Ablauf fest; ein anderer Pfad ist einstellbar.
+
+| Was im Repository passiert | Was folgt |
+|---|---|
+| Commit A hat den alten Testaufruf | Die Pipeline testet genau Commit A |
+| Commit B bringt den neuen Testaufruf | Neue Pipeline nötig |
+| Branchname bleibt gleich | Der Commit kann trotzdem ein anderer sein |
+
+Eine grüne Pipeline gilt nur für ihren Commit. Für später gepushte sagt sie nichts.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Pipeline, Job, Stage, Runner, Executor
+
+| Begriff | Aufgabe |
+|---|---|
+| **Pipeline** | Ein Durchlauf aller Jobs der CI-Konfiguration |
+| **Job** | Kommandos, endet grün oder rot |
+| **Stage** | Fasst Jobs zusammen, legt ihre Reihenfolge fest |
+| **Runner** | Nimmt passende Jobs an und führt sie aus |
+| **Executor** | Legt fest, in welcher Umgebung Jobs laufen |
+
+Der Runner führt jeden Job einzeln aus, nicht die ganze Pipeline als ein Skript. Scope und Executor behandeln wir später.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Erster Job: `hello`
+
+Ein Job für einen Runner, auf dem PowerShell installiert ist:
+
+```yaml
+hello:
+  script:
+    - pwsh -NoProfile -Command 'Write-Output "COMMIT=$env:CI_COMMIT_SHORT_SHA"'
+```
+
+`hello` ist der Jobname, unter `script` steht das Kommando. GitLab liefert die Commit-ID, `pwsh` schreibt sie ins Log.
+
+Der Job zeigt nur: Der Runner läuft und kennt den Commit. Die Dateiliste testet er noch nicht.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## `stages`: Reihenfolge der Jobs
+
+Nur zur Struktur: Alle drei Jobs geben bloß Text aus.
+
+```yaml
+stages: [lint, test, package]
+lint:
+  stage: lint
+  script: echo "Lint-Schritt"
+test:
+  stage: test
+  script: echo "Test-Schritt"
+package:
+  stage: package
+  script: echo "Paket-Schritt"
+```
+
+Die Reihenfolge legt `stages` fest, nicht die Position der Jobs im YAML. Was ein Job wirklich tut, steht **in seinen Kommandos**.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Fehlgeschlagener Job und folgende Stages
+
+Ohne `needs`, `allow_failure` oder eigene Regeln gilt:
+
+| Ergebnis | Was danach passiert |
+|---|---|
+| Lint grün | Stage `test` startet |
+| Test rot | Stage `package` startet nicht |
+| Test grün | Stage `package` startet |
+
+Läuft in derselben Stage schon ein anderer Job, bricht GitLab ihn nicht ab. Später zeigen wir, wie **Abhängigkeiten und Regeln** das ändern.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Parallele Jobs derselben Stage
+
+Zwei Testjobs in derselben Stage können parallel laufen. Ob sie wirklich gleichzeitig starten, hängt davon ab, ob passende Runner frei sind.
+
+Jeder Job läuft in seiner eigenen Umgebung: Eine Datei aus einem Job ist **im nächsten Job nicht automatisch da**.
+
+**Im Beispiel:** Der Job `test` schreibt einen Report, der Job `package` ein ZIP. Braucht ein späterer Job diese Dateien, müssen wir sie selbst weitergeben.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## `image`: Job-Image beim Docker-Executor
+
+```yaml
+default:
+  image: $TRAINING_CI_IMAGE
+```
+
+Beim Docker-Executor nennt die Variable das Image, in dem der Job läuft. Darin müssen Git, PowerShell und alles für die Tests schon installiert sein.
+
+Der Shell-Executor läuft dagegen direkt auf dem Host. Ein Image-Name **wählt keinen Executor und installiert keine Tools**. Auch einem „PowerShell-Image“ können Git und Module fehlen.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Shell des Containers und `pwsh`
+
+Ausschnitt aus dem Job `test`:
+
+```yaml
+test:
+  stage: test
+  script:
+    - pwsh -NoLogo -NoProfile -File ci/Test.ps1
+```
+
+In unserem Linux-Container liest zuerst eine Shell die Zeile. Erst `pwsh` startet dann PowerShell und führt die `.ps1`-Datei aus.
+
+Längere Testlogik gehört **ins Skript im Repository**. Kopieren Sie PowerShell-Befehle nicht ungeprüft ins YAML: Dort liest Bash mit.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Exit-Code des Testskripts
+
+Der Runner sieht nur den Exit-Code des Prozesses, nicht den Testreport.
+
+| Testlauf | Das Skript muss liefern |
+|---|---|
+| Alle Tests grün | Exit-Code `0` |
+| Mindestens ein Test rot | Exit-Code ungleich `0` |
+| Tests laufen nicht oder fehlen | Auch ungleich `0` |
+
+Die entscheidenden Zeilen aus unserem Testskript:
+
+```powershell
+if ($run.TotalCount -eq 0 -or $run.Result -ne 'Passed') { exit 1 }
+exit 0
+```
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Sortiertest mit absteigender Sortierung
+
+Absichtlich falsch sortiert, zur Demonstration:
+
+```powershell
+Sort-Object -Property Name -Descending
+```
+
+| Erste Zeile bei `alpha.txt` und `beta.txt` | Wert |
+|---|---|
+| Erwartet, aufsteigend | `alpha.txt - 1 Bytes` |
+| Tatsächlich, absteigend | `beta.txt - 2 Bytes` |
+
+Bei falscher Richtung wird der Test sicher rot. Fehlt `Sort-Object` ganz, merkt man es oft nicht: Das Dateisystem **liefert die Namen vielleicht schon sortiert**.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## `-ForceFailure`: absichtlicher Testfehler
+
+Unser Testskript kann außerdem absichtlich scheitern:
+
+```yaml
+test:
+  stage: test
+  script:
+    - pwsh -NoProfile -File ci/Test.ps1 -ForceFailure
+```
+
+`-ForceFailure` lässt einen Test absichtlich scheitern. So sehen wir, ob die Kette hält: **Test rot → Exit-Code `1` → Job rot**.
+
+Der rote Job heißt hier nicht, dass `ListFiles.ps1` falsch ist. Das klärt der Sortiertest: **Sortiert das Skript richtig?**
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Testbericht und Exit-Code im Fehlerfall
+
+Erwartete Logzeile beim absichtlichen Testfehler:
+
+```text
+TESTS: total=7 passed=6 failed=1 scenario=default
+```
+
+Zusätzlich endet das Testskript mit Exit-Code `1`. Fehlt dieser Exit-Code, wird der Job grün, obwohl ein Test fehlschlug.
+
+**Lesen Sie beides:** Was meldet das Testwerkzeug, und welchen Exit-Code sieht der Runner? Den XML-Report in GitLab zeigen wir später.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## `artifacts`: Dateien aus dem Job `package`
+
+Ausschnitt; das Skript `ci/Package.ps1` baut das ZIP:
+
+```yaml
+package:
+  stage: package
+  script: pwsh -NoProfile -File ci/Package.ps1
+  artifacts:
+    paths: [dist/*.zip]
+    expire_in: 1 week
+```
+
+Das ZIP baut das Skript. `paths` sammelt nur ein, was danach im Projektverzeichnis liegt.
+
+Das Artifact gehört zu diesem Joblauf und läuft nach einer Woche ab. **Git-Tag, Historie und dauerhafte Ablage** brauchen eigene Schritte.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## ZIP und Prüfsumme im Job `package`
+
+`ci/Package.ps1` erzeugt zum Beispiel:
+
+```text
+dist/banana-project-local.zip
+dist/banana-project-local.zip.sha256
+```
+
+Die Prüfsumme passt nur zu **diesem ZIP**. Für ein später neu gebautes ZIP gilt sie nicht. Am Dateinamen allein erkennen Sie nicht, welches ZIP es ist.
+
+Übergeben können Sie das Artifact erst, wenn die Dateien da sind und zum richtigen Commit gehören. Ist `dist/` leer, hilft auch ein grüner Job nichts.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Jobstatus `pending`, `running`, `failed`
+
+| Zustand | Was Sie prüfen |
+|---|---|
+| **pending** | Job wartet auf einen Runner; Runner, Tags, Branch-Schutz und freie Plätze prüfen |
+| **running** | Job läuft; im Log das aktuelle Kommando ansehen: Hängt es irgendwo? |
+| **failed** | Job oder seine Vorbereitung ist gescheitert; erste echte Fehlermeldung im Log suchen |
+
+Mit falschem Tag bleibt ein Job hängen. Fehlt `pwsh`, scheitert er nach dem Start. **In beiden Fällen ist der Sortiertest nicht rot: Er lief gar nicht.**
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+<div class="" style="position: absolute; left: 0%; top: 0%; height: 15%; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center" >
+
+
+## YAML-Einrückung von `script`
+
+</div>
+
+<div class="" style="position: absolute; left: 0%; top: 20%; height: 75%; width: 48%; display: flex; flex-direction: column; align-items: center; justify-content: center" >
+
+
+**Richtig eingerückt:**
+
+```yaml
+test:
+  script:
+    - echo "Prüfen"
+```
+
+`script` gehört zum Job `test`.
+
+</div>
+
+<div class="" style="position: absolute; left: 52%; top: 20%; height: 75%; width: 48%; display: flex; flex-direction: column; align-items: center; justify-content: center" >
+
+
+**`script` nicht eingerückt:**
+
+```yaml
+test:
+script:
+  - echo "Prüfen"
+```
+
+Gültiges YAML ist noch keine gültige GitLab-Konfiguration.
+
+</div>
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Pipeline mit `test` und `package`
+
+Ausschnitt; setzt das Kursimage, die Module und die Skripte voraus:
+
+```yaml
+stages: [test, package]
+default:
+  image: $TRAINING_CI_IMAGE
+test:
+  stage: test
+  script: pwsh -NoProfile -File ci/Test.ps1
+package:
+  stage: package
+  script: pwsh -NoProfile -File ci/Package.ps1
+  artifacts:
+    paths: [dist/*.zip]
+```
+
+Die vollständige Datei hat weitere Schritte. Hier zählt nur: **erst Tests grün, dann ZIP bauen**.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Joblog: Commit, Kommando, Fehlermeldung
+
+Der Branchname reicht nicht: Nach jedem Push kann er auf einen anderen Commit zeigen.
+
+| Im roten Job | Sagt Ihnen |
+|---|---|
+| Commit | Welcher Code getestet wurde |
+| Gestartetes Kommando | Was genau lief |
+| Erste echte Fehlermeldung | Test rot, Tool fehlt oder Übertragung gescheitert? |
+| Status | Wie der Job endete |
+
+Die letzte Logzeile meldet oft nur den Fehler. Die **Ursache** steht meist weiter oben.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Retry und neuer Commit nach der Korrektur
+
+So soll es laufen (ohne `allow_failure`):
+
+| Commit | Test | ZIP bauen |
+|---|---|---|
+| Commit mit absichtlichem Fehler | Rot | Startet nicht |
+| Neuer Commit mit Korrektur | Test läuft neu | Erst wenn Test grün |
+
+Ein Retry startet den alten Job mit dem alten Code. Die Korrektur muss als **neuer Commit** gepusht werden, damit eine neue Pipeline sie testet.
+
+„Korrigiert“ heißt: Code geändert, Tests passen, neuer Lauf.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Merge-Bedingung „Pipelines must succeed“
+
+Die Pipeline zeigt, ob ihre Jobs grün sind. Mit der Projekteinstellung **Pipelines must succeed** lässt GitLab den Merge erst zu, wenn die Pipeline grün ist.
+
+Gibt es mehrere Pipelines, zählt oft die MR-Pipeline. Schauen Sie deshalb auf den Status im MR, nicht auf irgendeinen grünen oder roten Lauf.
+
+Review, Branch-Rechte und erledigte Threads sind eigene Bedingungen. Ein grüner Test ersetzt kein Approval, ein Approval keinen Test.
+
+**Im Beispiel:** Der Sortiertest muss auf dem letzten Commit gelaufen sein, und der MR muss den vereinbarten Merge-Regeln folgen.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Rückblick Teil IV
+
+Konfiguration: Jobs und Stages legen einen klaren Ablauf fest. Ausführung: Ein passender Runner stellt die nötige Umgebung bereit.
+
+Tests: Ein echter Fehler führt zu Exit-Code ungleich `0` und einem roten Job. Ergebnis: Ist der Job `package` grün, liegt das ZIP als Artifact vor.
+
+**Transfer:** Heißt `pending` schon, dass ein Test rot ist? Und woran sehen Sie, dass der neue Commit getestet wurde?
+
+Im nächsten Teil geht es um drei Fragen: **Startet überhaupt eine Pipeline, welche Jobs laufen mit, und worauf warten sie?**
+</div></script></section></section></div>
+    </div>
+
+    <script src="dist/reveal.js"></script>
+    <script src="plugin/notes/notes.js"></script>
+    <script src="plugin/markdown/markdown.js"></script>
+    <script src="plugin/obsidian-markdown.js"></script>
+    <script src="plugin/highlight/highlight.js"></script>
+
+    <script src="plugin/zoom/zoom.js"></script>
+    <script src="plugin/customcontrols/plugin.js"></script>
+
+
+    <script>
+        function extend() {
+            const target = {};
+            for (let i = 0; i < arguments.length; i++) {
+                const source = arguments[i];
+                for (const key in source) {
+                    if (source.hasOwnProperty(key)) {
+                        target[key] = source[key];
+                    }
+                }
+            }
+            return target;
+        }
+
+        function isLight(color) {
+            // normalize to rgb(a)
+            const optionEl = document.createElement("option");
+            optionEl.style.color = color;
+            const normalizedColor = optionEl.style.color;
+
+            const match = normalizedColor.match(/(\d+), (\d+), (\d+)/);
+            if (!match) return false;
+            const [, c_r, c_g, c_b] = match;
+
+            const brightness = ((c_r * 299) + (c_g * 587) + (c_b * 114)) / 1000;
+            return brightness > 155;
+        }
+
+        const bgColor = getComputedStyle(document.documentElement).getPropertyValue('--r-background-color').trim();
+
+        if (isLight(bgColor)) {
+            document.body.classList.add('has-light-background');
+        } else {
+            document.body.classList.add('has-dark-background');
+        }
+
+        // default options to init reveal.js
+        const defaultOptions = {
+            controls: true,
+            progress: true,
+            history: true,
+            center: true,
+            transition: 'default', // none/fade/slide/convex/concave/zoom
+            plugins: [
+                ObsidianMarkdown,
+                RevealHighlight,
+                RevealZoom,
+                RevealNotes,
+                
+                
+                
+                RevealCustomControls,
+            ],
+            allottedTime: "120",
+
+            katex: {
+                local: 'plugin/math/katex',
+                extensions: ["mhchem"],
+            },
+            markdown: {
+                gfm: true,
+            },
+            mermaid: {
+                theme: isLight(bgColor) ? 'default' : 'dark',
+            },
+            customcontrols: {
+                controls: [
+                ]
+            },
+        };
+
+        if ( pageInIframe() ) {
+            defaultOptions.scrollActivationWidth = 5;
+        }
+
+        // options from URL query string
+        const queryOptions = Reveal().getQueryHash() || {};
+
+        const options = extend(defaultOptions, {"controls":true,"progress":true,"slideNumber":"c/t","center":true,"transition":"none","transitionSpeed":"default","width":1280,"height":720,"margin":0.08,"backgroundTransition":"none"}, queryOptions);
+    </script>
+
+    <script>
+      /**
+       * KaTeX Equation Numbering Note
+       *
+       * KaTeX maintains a global equation counter for \begin{equation} environments.
+       * When navigating between slides, reveal.js math plugin may re-render math, causing
+       * equation numbers to change randomly.
+       *
+       * Note: Regular $$ blocks don't have equation numbers - only \begin{equation} does.
+       *
+       * If you experience issues with equation numbers changing:
+       * Use manual \tag{} commands: \begin{equation}\tag{1} ... \end{equation}
+       */
+
+      Reveal.initialize(options);
+    </script>
+    <!-- created with Slides Extended reveal.html template -->
+</body>
+</html>

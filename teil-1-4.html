@@ -126,7 +126,7 @@ Alle Teile arbeiten an derselben kleinen Änderung: Ein PowerShell-Skript soll D
 5. Pipeline-Steuerung <!-- .element: class="fragment" data-fragment-index="5" -->
 6. Secrets und Pipeline-Daten <!-- .element: class="fragment" data-fragment-index="6" -->
 7. Runner, Container und Tests <!-- .element: class="fragment" data-fragment-index="7" -->
-8. Auto DevOps und Transfer <!-- .element: class="fragment" data-fragment-index="8" -->
+8. Auto DevOps und nächste Schritte <!-- .element: class="fragment" data-fragment-index="8" -->
 
 </div>
 </div></script></section><section ><section data-separator="?
@@ -256,8 +256,6 @@ Das Repository speichert den Quellcode mit seiner Historie. Das Artifact ist **n
 
 **Definition:** Das Team führt seine Änderungen oft, meist mehrmals täglich, im gemeinsamen Branch zusammen. Build und Tests laufen dabei automatisch und melden, ob noch alles funktioniert.
 
-**Im Beispiel:** Die Sortieränderung ist klein. Sie wird reviewt, in `main` übernommen und dort zusammen mit den Änderungen der anderen getestet.
-
 **Kein CI:** Ein Branch bleibt wochenlang getrennt und wird jeden Tag gebaut. Mit der Arbeit der anderen wird er aber erst spät zusammengeführt.
 </div></script></section><section data-separator="?
 ---?
@@ -364,8 +362,6 @@ GitLab legt diese Zuständigkeiten nicht fest, das **vereinbart das Team**. Eine
 **Issue → Änderung → Review → Test → Freigabe:** An jedem Schritt prüft jemand etwas anderes.
 
 Bei CI führt das Team oft zusammen und testet automatisch. Delivery und Deployment unterscheiden sich darin, ob vor der Produktion ein Mensch freigibt.
-
-**Transfer:** Das Artifact ist grün, aber die Liste ist falsch sortiert. Welcher Test fehlt?
 
 Im nächsten Teil geht es darum, **welche lokalen Dateien Git speichert und zu GitLab überträgt**.
 </div></script></section></section><section ><section data-separator="?
@@ -845,7 +841,7 @@ Ein Force-Push hilft weder bei fehlenden Rechten noch bei inhaltlichen Fragen. E
 | Kleiner README-Fix | Code, Test und README gemeinsam ändern |
 | Änderung committen | Änderungen auswählen und committen |
 
-Jede Änderung im Browser ist ein normaler Commit, mit Branch und Review wie lokal. Tests laufen dort nicht: Pester startet erst in der Pipeline.
+Jede Änderung im Browser ist ein normaler Commit, mit Branch und Review wie lokal. Tests laufen dort nicht, sie starten erst in der Pipeline.
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -970,8 +966,6 @@ Test und README zur Sortierung gehören dazu. Wollen Sie nebenbei umbauen, mache
 | Skript bearbeitet | Ist der richtige Stand im Index? |
 | Commit lokal da | Ist er im richtigen Remote angekommen? |
 | Code in GitLab | Sagen Issue, README und Test dasselbe? |
-
-**Transfer:** Ihr Commit ist lokal da, aber in GitLab nicht zu sehen. Welcher Schritt fehlt noch?
 
 Jetzt arbeiten mehrere mit: **Was passiert, wenn andere `main` ändern, während wir arbeiten?**
 </div></script></section></section><section ><section data-separator="?
@@ -1099,8 +1093,6 @@ Trunk-Based heißt **nicht automatisch: direkt pushen ohne Prüfung**. Eine form
 | Mehrere Versionen gleichzeitig pflegen | Wege für Releases und Hotfixes festlegen |
 | Eigener Stand pro Umgebung | Wer bringt was in welche Umgebung? |
 | Kleine Änderungen häufig mergen | Review und Tests müssen schnell sein |
-
-Für unsere eine Sortieränderung reicht ein kurzer Branch mit MR. Für ein anderes Produkt kann eine andere Strategie besser passen.
 
 **Branching-Strategie, Merge-Methode und Freigabe für Produktion sind drei getrennte Entscheidungen.**
 </div></script></section><section data-separator="?
@@ -1234,11 +1226,8 @@ git commit -m "merge: integriere aktuellen main"
 
 ## Merge und Rebase im Vergleich
 
-| Merge | Rebase |
-|---|---|
-| Führt zwei Branches zusammen | Setzt eigene Commits auf neue Basis |
-| Commits behalten ihre IDs | Commits bekommen neue IDs |
-| Kann einen Merge-Commit erzeugen | Ergibt eine gerade Historie |
+<img src="figs/git-merge-rebase.png" alt="Vorher zweigen B und C von A ab. Nach dem Merge verbindet M die Commits B und C. Nach dem Rebase steht B als neuer Commit B' hinter C, die Historie ist eine gerade Linie." style="object-fit: scale-down">
+
 
 Merge behält die Historie, Rebase schreibt sie neu. Schon gepushte Commits schreiben Sie nur um, **wenn das Team das abgesprochen hat**. Andere könnten darauf aufbauen.
 </div></script></section><section data-separator="?
@@ -1364,7 +1353,6 @@ Mit der Einstellung **All threads must be resolved** blockieren offene Threads d
 |---|---|---|
 | Optionales Approval | Zustimmung, aber kein Muss | **Free** |
 | Erforderliche Approval-Regel | Merge erst nach festgelegten Zustimmungen | **Premium / Ultimate** |
-| Code-Owner-Approval | Zustimmung pro Pfad vorgeschrieben | **Premium / Ultimate** |
 
 Auf Free kann das Team Review **fest vereinbaren**. GitLab erzwingt das Approval dann aber nicht.
 
@@ -1454,29 +1442,7 @@ Die drei Commits bleiben im Source-Branch erhalten. Für die nächste Änderung 
 " data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
 <div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
 
-## Code Owners: Pfadregeln
-
-Vereinfachtes Beispiel ohne Sections (**Premium / Ultimate**):
-
-```text
-*       @team/maintainer
-*.ps1   @team/powershell
-/tests/ @team/test
-```
-
-Für `ListFiles.ps1` gilt die `*.ps1`-Regel, für die Tests die `/tests/`-Regel. Bei einfachen Regeln wie diesen gewinnt die **letzte passende Regel**.
-
-Die Datei allein erzwingt kein Approval. Dafür muss der Zielbranch geschützt und Code-Owner-Approval aktiviert sein.
-
-[GitLab: Code Owners](https://docs.gitlab.com/user/project/codeowners/) · [Syntax](https://docs.gitlab.com/user/project/codeowners/reference/)
-</div></script></section><section data-separator="?
----?
-" data-separator-vertical="?
---?
-" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
-<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
-
-## Reviewweg auf Free
+## Reviewweg
 
 1. &shy;<!-- .element: class="fragment" data-fragment-index="1" -->Der MR erklärt: Warum, was genau, welche Tests? 
 1. &shy;<!-- .element: class="fragment" data-fragment-index="2" -->Der Reviewer prüft und schreibt seine Kommentare. 
@@ -1485,7 +1451,7 @@ Die Datei allein erzwingt kein Approval. Dafür muss der Zielbranch geschützt u
 
 <div class="fragment" data-fragment-index="5">
 
-Eine Tabelle im README kann festhalten, **wer was prüft**. Das ersetzt weder die Code-Owners-Funktion noch ein Approval, das GitLab erzwingt.
+Eine Tabelle im README kann festhalten, **wer was prüft**. Das ersetzt kein Approval, das GitLab erzwingt.
 
 </div>
 </div></script></section><section data-separator="?
@@ -1502,13 +1468,7 @@ Eine Tabelle im README kann festhalten, **wer was prüft**. Das ersetzt weder di
 
 - &shy;<!-- .element: class="fragment" data-fragment-index="1" -->Der Reviewer prüft die Commits „Sortierung“ und „Test“ und gibt **Approve**. 
 - &shy;<!-- .element: class="fragment" data-fragment-index="2" -->Danach pusht der Autor einen weiteren Commit in denselben Branch. Der MR zeigt ihn sofort mit an. 
-- &shy;<!-- .element: class="fragment" data-fragment-index="3" -->Das Approve gilt nur für den geprüften Stand. Der neue Commit braucht **neues Review** und eine grüne Pipeline. 
-
-<div class="fragment" data-fragment-index="4">
-
-Premium und Ultimate können Approvals bei neuen Commits automatisch zurücksetzen. Auf Free vereinbart das Team das erneute Review selbst.
-
-</div>
+- &shy;<!-- .element: class="fragment" data-fragment-index="3" -->Das Approve gilt nur für den geprüften Stand. Der neue Commit braucht **neues Review** und eine grüne Pipeline.
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1519,8 +1479,6 @@ Premium und Ultimate können Approvals bei neuen Commits automatisch zurücksetz
 ## Rückblick Teil III
 
 Die Branching-Strategie passt dazu, wie das Team mergt. Die Konfliktlösung erfüllt beide Anforderungen. Der MR erklärt die Änderung; Review und Tests beziehen sich auf **das, was gemergt wird**.
-
-**Transfer:** Die README hat keinen Konflikt, der MR ist approved, der Merge-Button ist grün. Welcher Test für die Sortierung könnte trotzdem fehlen?
 
 Als Nächstes lassen wir diese Prüfung **automatisch als Job laufen** und schauen auf seinen Status.
 </div></script></section></section><section ><section data-separator="?
@@ -1546,8 +1504,6 @@ Als Nächstes lassen wir diese Prüfung **automatisch als Job laufen** und schau
 - &shy;<!-- .element: class="fragment" data-fragment-index="4" -->Tests, ZIP und Merge-Freigabe getrennt prüfen. 
 
 <div class="fragment" data-fragment-index="5">
-
-Leitfrage: **Woran sehen wir, dass die neue Sortierung getestet wurde?**
 
 </div>
 </div></script></section><section data-separator="?
@@ -1615,13 +1571,10 @@ Der Job zeigt nur: Der Runner läuft und kennt den Commit. Die Dateiliste testet
 
 ## `stages`: Reihenfolge der Jobs
 
-Nur zur Struktur: Alle drei Jobs geben bloß Text aus.
+Nur zur Struktur: Beide Jobs geben bloß Text aus.
 
 ```yaml
-stages: [lint, test, package]
-lint:
-  stage: lint
-  script: echo "Lint-Schritt"
+stages: [test, package]
 test:
   stage: test
   script: echo "Test-Schritt"
@@ -1640,15 +1593,12 @@ Die Reihenfolge legt `stages` fest, nicht die Position der Jobs im YAML. Was ein
 
 ## Fehlgeschlagener Job und folgende Stages
 
-Ohne `needs`, `allow_failure` oder eigene Regeln gilt:
-
 | Ergebnis | Was danach passiert |
 |---|---|
-| Lint grün | Stage `test` startet |
 | Test rot | Stage `package` startet nicht |
 | Test grün | Stage `package` startet |
 
-Läuft in derselben Stage schon ein anderer Job, bricht GitLab ihn nicht ab. Später zeigen wir, wie **Abhängigkeiten und Regeln** das ändern.
+Läuft in derselben Stage schon ein anderer Job, bricht GitLab ihn nicht ab.
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1661,8 +1611,6 @@ Läuft in derselben Stage schon ein anderer Job, bricht GitLab ihn nicht ab. Sp�
 Zwei Testjobs in derselben Stage können parallel laufen. Ob sie wirklich gleichzeitig starten, hängt davon ab, ob passende Runner frei sind.
 
 Jeder Job läuft in seiner eigenen Umgebung: Eine Datei aus einem Job ist **im nächsten Job nicht automatisch da**.
-
-**Im Beispiel:** Der Job `test` schreibt einen Report, der Job `package` ein ZIP. Braucht ein späterer Job diese Dateien, müssen wir sie selbst weitergeben.
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1674,10 +1622,10 @@ Jeder Job läuft in seiner eigenen Umgebung: Eine Datei aus einem Job ist **im n
 
 ```yaml
 default:
-  image: $TRAINING_CI_IMAGE
+  image: gitlab.devadze.de:5050/schulung/ci-image:7.5
 ```
 
-Beim Docker-Executor nennt die Variable das Image, in dem der Job läuft. Darin müssen Git, PowerShell und alles für die Tests schon installiert sein.
+Beim Docker-Executor nennt `image` das Image, in dem der Job läuft. Darin müssen Git, PowerShell und alles für die Tests schon installiert sein.
 
 Der Shell-Executor läuft dagegen direkt auf dem Host. Ein Image-Name **wählt keinen Executor und installiert keine Tools**. Auch einem „PowerShell-Image“ können Git und Module fehlen.
 </div></script></section><section data-separator="?
@@ -1708,9 +1656,32 @@ Längere Testlogik gehört **ins Skript im Repository**. Kopieren Sie PowerShell
 " data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
 <div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
 
+## Pester: Testframework für PowerShell
+
+`ci/Test.ps1` führt die Tests mit **Pester** aus. Pester ist für PowerShell, was pytest für Python ist. Es ist im CI-Image installiert; lokal brauchen Sie es nicht.
+
+```powershell
+Describe 'ListFiles' {
+    It 'sortiert Dateien und lässt Unterverzeichnisse aus' {
+        $rows = @(& $listScript -Path $folder)
+        $rows[0] | Should -Be 'a.txt - 1 Bytes'
+    }
+}
+```
+
+- &shy;<!-- .element: class="fragment" data-fragment-index="1" -->`Describe` fasst zusammengehörige Tests zusammen. 
+- &shy;<!-- .element: class="fragment" data-fragment-index="2" -->`It` ist ein einzelner Test. 
+- &shy;<!-- .element: class="fragment" data-fragment-index="3" -->`Should` prüft das Ergebnis. Stimmt es nicht, ist der Test rot.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
 ## Exit-Code des Testskripts
 
-Der Runner sieht nur den Exit-Code des Prozesses, nicht den Testreport.
+Der Runner sieht nur den Exit-Code des Prozesses, nicht die Testergebnisse.
 
 | Testlauf | Das Skript muss liefern |
 |---|---|
@@ -1731,20 +1702,14 @@ exit 0
 " data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
 <div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
 
-## Sortiertest mit absteigender Sortierung
+## Was ein Test findet und was nicht
 
-Absichtlich falsch sortiert, zur Demonstration:
-
-```powershell
-Sort-Object -Property Name -Descending
-```
-
-| Erste Zeile bei `alpha.txt` und `beta.txt` | Wert |
+| Fehler im Code | Test |
 |---|---|
-| Erwartet, aufsteigend | `alpha.txt - 1 Bytes` |
-| Tatsächlich, absteigend | `beta.txt - 2 Bytes` |
+| Falsche Sortierrichtung (`-Descending`) | **rot**: erste Zeile ist `beta.txt` statt `alpha.txt` |
+| `Sort-Object` fehlt ganz | **oft grün**: das Dateisystem liefert die Namen schon sortiert |
 
-Bei falscher Richtung wird der Test sicher rot. Fehlt `Sort-Object` ganz, merkt man es oft nicht: Das Dateisystem **liefert die Namen vielleicht schon sortiert**.
+**Ein grüner Test zeigt nur, dass das Geprüfte stimmt. Was der Test nicht prüft, kann trotzdem falsch sein.**
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1773,17 +1738,17 @@ Der rote Job heißt hier nicht, dass `ListFiles.ps1` falsch ist. Das klärt der 
 " data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
 <div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
 
-## Testbericht und Exit-Code im Fehlerfall
+## Joblog im Fehlerfall: Testergebnis und Exit-Code
 
 Erwartete Logzeile beim absichtlichen Testfehler:
 
 ```text
-TESTS: total=7 passed=6 failed=1 scenario=default
+TESTS: total=5 passed=4 failed=1
 ```
 
 Zusätzlich endet das Testskript mit Exit-Code `1`. Fehlt dieser Exit-Code, wird der Job grün, obwohl ein Test fehlschlug.
 
-**Lesen Sie beides:** Was meldet das Testwerkzeug, und welchen Exit-Code sieht der Runner? Den XML-Report in GitLab zeigen wir später.
+**Lesen Sie beides:** Was meldet das Testwerkzeug, und welchen Exit-Code sieht der Runner?
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1800,13 +1765,12 @@ package:
   stage: package
   script: pwsh -NoProfile -File ci/Package.ps1
   artifacts:
-    paths: [dist/*.zip]
-    expire_in: 1 week
+    paths: [dist/]
 ```
 
 Das ZIP baut das Skript. `paths` sammelt nur ein, was danach im Projektverzeichnis liegt.
 
-Das Artifact gehört zu diesem Joblauf und läuft nach einer Woche ab. **Git-Tag, Historie und dauerhafte Ablage** brauchen eigene Schritte.
+Das Artifact gehört zu diesem Joblauf. **Git-Tag, Historie und dauerhafte Ablage** brauchen eigene Schritte.
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1837,11 +1801,20 @@ Die Prüfsumme passt nur zu **diesem ZIP**. Für ein später neu gebautes ZIP gi
 
 | Zustand | Was Sie prüfen |
 |---|---|
-| **pending** | Job wartet auf einen Runner; Runner, Tags, Branch-Schutz und freie Plätze prüfen |
+| **pending** | Job wartet auf einen Runner; ist ein passender Runner frei? |
 | **running** | Job läuft; im Log das aktuelle Kommando ansehen: Hängt es irgendwo? |
 | **failed** | Job oder seine Vorbereitung ist gescheitert; erste echte Fehlermeldung im Log suchen |
 
-Mit falschem Tag bleibt ein Job hängen. Fehlt `pwsh`, scheitert er nach dem Start. **In beiden Fällen ist der Sortiertest nicht rot: Er lief gar nicht.**
+Zwei Fälle, in denen die Tests gar nicht laufen:
+
+- &shy;<!-- .element: class="fragment" data-fragment-index="1" -->Kein passender Runner frei: Der Job bleibt `pending`. 
+- &shy;<!-- .element: class="fragment" data-fragment-index="2" -->Im Image fehlt `pwsh`: Der Job startet und scheitert sofort (`failed`). 
+
+<div class="fragment" data-fragment-index="3">
+
+**Ein hängender oder roter Job heißt also nicht, dass ein Test rot ist.** Erst im Log nachsehen, ob die Tests überhaupt gelaufen sind.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1849,17 +1822,9 @@ Mit falschem Tag bleibt ein Job hängen. Fehlt `pwsh`, scheitert er nach dem Sta
 " data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
 <div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
 
-<div class="" style="position: absolute; left: 0%; top: 0%; height: 15%; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center" >
-
-
 ## YAML-Einrückung von `script`
 
-</div>
-
-<div class="" style="position: absolute; left: 0%; top: 20%; height: 75%; width: 48%; display: flex; flex-direction: column; align-items: center; justify-content: center" >
-
-
-**Richtig eingerückt:**
+**Richtig:** `script` ist eingerückt und gehört zum Job `test`.
 
 ```yaml
 test:
@@ -1867,14 +1832,7 @@ test:
     - echo "Prüfen"
 ```
 
-`script` gehört zum Job `test`.
-
-</div>
-
-<div class="" style="position: absolute; left: 52%; top: 20%; height: 75%; width: 48%; display: flex; flex-direction: column; align-items: center; justify-content: center" >
-
-
-**`script` nicht eingerückt:**
+**Falsch:** `script` steht auf derselben Ebene wie `test`. GitLab hält beide für eigene Jobs, und keiner hat ein `script`.
 
 ```yaml
 test:
@@ -1882,9 +1840,7 @@ script:
   - echo "Prüfen"
 ```
 
-Gültiges YAML ist noch keine gültige GitLab-Konfiguration.
-
-</div>
+GitLab startet keine Pipeline und meldet: `jobs test config should implement the script:, run:, or trigger: keyword`
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1894,12 +1850,12 @@ Gültiges YAML ist noch keine gültige GitLab-Konfiguration.
 
 ## Pipeline mit `test` und `package`
 
-Ausschnitt; setzt das Kursimage, die Module und die Skripte voraus:
+Setzt die Skripte `ci/Test.ps1` und `ci/Package.ps1` voraus:
 
 ```yaml
 stages: [test, package]
 default:
-  image: $TRAINING_CI_IMAGE
+  image: gitlab.devadze.de:5050/schulung/ci-image:7.5
 test:
   stage: test
   script: pwsh -NoProfile -File ci/Test.ps1
@@ -1907,10 +1863,10 @@ package:
   stage: package
   script: pwsh -NoProfile -File ci/Package.ps1
   artifacts:
-    paths: [dist/*.zip]
+    paths: [dist/]
 ```
 
-Die vollständige Datei hat weitere Schritte. Hier zählt nur: **erst Tests grün, dann ZIP bauen**.
+**Erst Tests grün, dann ZIP bauen.**
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1977,10 +1933,6 @@ Review, Branch-Rechte und erledigte Threads sind eigene Bedingungen. Ein grüner
 Konfiguration: Jobs und Stages legen einen klaren Ablauf fest. Ausführung: Ein passender Runner stellt die nötige Umgebung bereit.
 
 Tests: Ein echter Fehler führt zu Exit-Code ungleich `0` und einem roten Job. Ergebnis: Ist der Job `package` grün, liegt das ZIP als Artifact vor.
-
-**Transfer:** Heißt `pending` schon, dass ein Test rot ist? Und woran sehen Sie, dass der neue Commit getestet wurde?
-
-Im nächsten Teil geht es um drei Fragen: **Startet überhaupt eine Pipeline, welche Jobs laufen mit, und worauf warten sie?**
 </div></script></section></section></div>
     </div>
 

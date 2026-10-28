@@ -1559,7 +1559,7 @@ hello:
     - pwsh -NoProfile -Command 'Write-Output "COMMIT=$env:CI_COMMIT_SHORT_SHA"'
 ```
 
-`hello` ist der Jobname, unter `script` steht das Kommando. GitLab liefert die Commit-ID, `pwsh` schreibt sie ins Log.
+`hello` ist der Jobname, unter `script` steht das Kommando. `CI_COMMIT_SHORT_SHA` enthält die ersten 8 Zeichen der ID des Commits, der die Pipeline ausgelöst hat. `pwsh` schreibt sie ins Log.
 
 Der Job zeigt nur: Der Runner läuft und kennt den Commit. Die Dateiliste testet er noch nicht.
 </div></script></section><section data-separator="?

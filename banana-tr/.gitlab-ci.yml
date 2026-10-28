@@ -1,0 +1,20 @@
+# Pipeline für Lab 06: erst testen, dann packen.
+default:
+  # CI-Image der Schulung mit PowerShell und Pester
+  image: gitlab.devadze.de:5050/schulung/ci-image:7.5
+
+# Reihenfolge der Stages: package startet erst, wenn test grün ist.
+stages: [test, package]
+
+test:
+  stage: test
+  script:
+    - pwsh -NoProfile -File ci/Test.ps1
+
+package:
+  stage: package
+  script:
+    - pwsh -NoProfile -File ci/Package.ps1 -Version "$CI_COMMIT_SHORT_SHA"
+  # Das ZIP und die Prüfsumme als Artifact in GitLab aufbewahren.
+  artifacts:
+    paths: [dist/]

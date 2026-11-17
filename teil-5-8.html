@@ -833,6 +833,28 @@ Ein Featurebranch bekommt sie nicht automatisch. `TRAINING_DUMMY_SECRET` ist `pr
 " data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
 <div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
 
+## Protected Variables: dieselbe Zeile, zwei Branches
+
+`show_variables` gibt das Secret aus:
+
+```yaml
+script:
+  - echo "Secret    = $TRAINING_DUMMY_SECRET"
+```
+
+| Pipeline auf | Branch geschützt? | Ausgabe im Joblog |
+|---|---|---|
+| `main` | ja | `Secret    = [MASKED]` |
+| `test/secret` | nein | `Secret    =` |
+
+Auf `main` ist der Wert da, GitLab zeigt ihn nur maskiert. Auf `test/secret` fehlt er ganz. Der Job läuft trotzdem grün durch, weil eine leere Variable kein Fehler ist.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
 ## Bekommt der Job die Variable?
 
 Prüfen Sie zuerst, ob der Job den Wert überhaupt bekommt, dann, welcher Wert gewinnt. Eine Projektvariable kann Vorrang haben und für diesen Job trotzdem nicht gelten.

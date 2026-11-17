@@ -105,13 +105,17 @@
 
 ## Lernziele Teil V
 
+<div class="fragment" data-fragment-index="1">
+
 Für eine Änderung können Sie drei Fragen beantworten:
 
-- &shy;<!-- .element: class="fragment" data-fragment-index="1" -->Was startet eine Pipeline? 
-- &shy;<!-- .element: class="fragment" data-fragment-index="2" -->Welche Prüfungen laufen in dieser Pipeline? 
-- &shy;<!-- .element: class="fragment" data-fragment-index="3" -->Auf welche Jobs und Dateien wartet ein Job? 
+</div>
 
-<div class="fragment" data-fragment-index="4">
+- &shy;<!-- .element: class="fragment" data-fragment-index="2" -->Was startet eine Pipeline? 
+- &shy;<!-- .element: class="fragment" data-fragment-index="3" -->Welche Prüfungen laufen in dieser Pipeline? 
+- &shy;<!-- .element: class="fragment" data-fragment-index="4" -->Auf welche Jobs und Dateien wartet ein Job? 
+
+<div class="fragment" data-fragment-index="5">
 
 Der Weg: zuerst der Aufbau der Datei, dann `needs`, `workflow` und `rules`, zum Schluss `include` und `extends` im Detail.
 
@@ -125,7 +129,13 @@ Der Weg: zuerst der Aufbau der Datei, dann `needs`, `workflow` und `rules`, zum 
 
 ## Drei Fragen zu einem Commit
 
+<div class="fragment" data-fragment-index="1">
+
 Beispiel: Ein Commit im Featurebranch korrigiert die Grenzwertprüfung zu `lower <= value <= upper`.
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 | Frage | Beispiel | Wer entscheidet |
 |---|---|---|
@@ -133,7 +143,13 @@ Beispiel: Ein Commit im Featurebranch korrigiert die Grenzwertprüfung zu `lower
 | Läuft der Job mit? | `build_image` fehlt auf einem Featurebranch | Job-`rules` |
 | Wann kann der Job starten? | `build_wheel` wartet auf `lint` und `unit_tests` | `stage`, `needs` |
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Keine Pipeline, ein fehlender Job, ein wartender Job: Das sind **drei verschiedene Ursachen**.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -143,7 +159,13 @@ Keine Pipeline, ein fehlender Job, ein wartender Job: Das sind **drei verschiede
 
 ## Aufbau der Hauptdatei `.gitlab-ci.yml`
 
+<div class="fragment" data-fragment-index="1">
+
 Ausschnitt aus dem Projekt:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 ```yaml
 workflow:
@@ -159,7 +181,13 @@ lint:
   …
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Die Hauptdatei legt die Stages fest und enthält die Jobs. `include` bindet eine zweite Datei ein: die Vorlage mit Image, Installation und Cache für alle Python-Jobs. Ob überhaupt eine Pipeline entsteht, entscheiden die `workflow:rules` am Dateianfang.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -169,6 +197,8 @@ Die Hauptdatei legt die Stages fest und enthält die Jobs. `include` bindet eine
 
 ## Welche Datei legt was fest?
 
+<div class="fragment" data-fragment-index="1">
+
 | Datei | Was sie festlegt |
 |---|---|
 | `.gitlab-ci.yml` | Wann läuft welcher Job? In welchem Image, mit welchen Variablen? |
@@ -176,7 +206,13 @@ Die Hauptdatei legt die Stages fest und enthält die Jobs. `include` bindet eine
 | `pyproject.toml` | Welche Dateien kommen ins Wheel? Welche Optionen bekommt pytest? |
 | `requirements-dev.txt` | Welche Werkzeuge in welcher Version? |
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 Wer einen Test unter `tests/unit/` ändert, ändert die Prüfung der Pipeline, auch wenn das YAML gleich bleibt.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -186,13 +222,21 @@ Wer einen Test unter `tests/unit/` ändert, ändert die Prüfung der Pipeline, a
 
 ## YAML-Quoting
 
+<div class="fragment" data-fragment-index="1">
+
 ```yaml
 # YAML-Ausschnitt: Der Doppelpunkt gehört zum String.
 script:
   - 'echo "Status: bereit"'
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 Die äußeren Anführungszeichen sind für YAML. Ohne sie liest YAML `Status: bereit` als Schlüssel mit Wert, und die Konfiguration ist ungültig. Danach liest die Shell den Befehl noch einmal selbst.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -201,6 +245,8 @@ Die äußeren Anführungszeichen sind für YAML. Ohne sie liest YAML `Status: be
 <div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
 
 ## `after_script`: eigene Shell
+
+<div class="fragment" data-fragment-index="1">
 
 ```yaml
 # Beispiel
@@ -211,7 +257,13 @@ job:
     - echo "STAND = $STAND"    # gibt "STAND = " aus
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 `before_script` und `script` laufen in derselben Shell, `after_script` in einer **eigenen Shell**. Variablen, die `script` setzt, kennt `after_script` deshalb nicht.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -221,7 +273,13 @@ job:
 
 ## Stages legen fest, wer wartet
 
+<div class="fragment" data-fragment-index="1">
+
 In der Stage `test` sind drei Jobs definiert. Der Job `build_wheel` in der Stage `build` braucht nur einen davon:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 | Job | Braucht `build_wheel` den Job? |
 |---|---|
@@ -229,7 +287,13 @@ In der Stage `test` sind drei Jobs definiert. Der Job `build_wheel` in der Stage
 | `integration_tests` | Nein, darauf wartet erst `build_image` |
 | `scenarios` | Nein |
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Ohne `needs` wartet jede Stage auf die vorherige. Mit `needs` nennt ein Job die Jobs, auf die er wartet: Sie streichen so nur **unnötige** Wartezeiten, alle Tests laufen weiter.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -239,10 +303,14 @@ Ohne `needs` wartet jede Stage auf die vorherige. Mit `needs` nennt ein Job die 
 
 ## DAG: Kanten zwischen Jobs
 
-<img src="figs/pipeline-dag.png" alt="DAG der Messwertprüfung: lint und unit_tests vor build_wheel; build_wheel vor install_check; build_wheel und integration_tests vor build_image; build_image vor container_smoke; scenarios liegt außerhalb dieses Pfads." style="object-fit: scale-down">
+<img src="figs/pipeline-dag.png" alt="DAG der Messwertprüfung: lint und unit_tests vor build_wheel; build_wheel vor install_check; build_wheel und integration_tests vor build_image; build_image vor container_smoke; scenarios liegt außerhalb dieses Pfads." style="object-fit: scale-down" class="fragment" data-fragment-index="1">
 
+
+<div class="fragment" data-fragment-index="2">
 
 Der DAG (gerichteter Graph) zeigt die `needs`-Kanten der Messwertprüfung. **Ein Pfeil heißt: muss vorher fertig sein.**
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -252,7 +320,13 @@ Der DAG (gerichteter Graph) zeigt die `needs`-Kanten der Messwertprüfung. **Ein
 
 ## `needs` im Job `build_wheel`
 
+<div class="fragment" data-fragment-index="1">
+
 Ausschnitt aus `build_wheel`:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 ```yaml
 build_wheel:
@@ -266,7 +340,13 @@ build_wheel:
     paths: [dist/]
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Der Job startet, sobald `lint` und `unit_tests` fertig sind, ohne auf die übrigen Tests zu warten. In dieser kurzen Schreibweise wartet `needs` auf die genannten Jobs **und** lädt ihre Artifacts. Wer nur warten will, nutzt die lange Schreibweise mit `job:` und `artifacts: false`.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -276,7 +356,13 @@ Der Job startet, sobald `lint` und `unit_tests` fertig sind, ohne auf die übrig
 
 ## `needs` im Job `install_check`
 
+<div class="fragment" data-fragment-index="1">
+
 Ausschnitt aus `install_check`:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 ```yaml
 install_check:
@@ -291,7 +377,13 @@ install_check:
     - /tmp/fresh/bin/pip install --no-deps dist/*.whl
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Der Job liegt in derselben Stage `build` wie `build_wheel`. Ohne `needs` starten beide gleichzeitig, und `dist/` fehlt. Mit `needs` wartet er genau auf `build_wheel`, nicht auf eine ganze Stage. `artifacts: true` ist der Standard und hier nur ausgeschrieben.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -301,7 +393,13 @@ Der Job liegt in derselben Stage `build` wie `build_wheel`. Ohne `needs` starten
 
 ## `needs` mit `artifacts: true`: Wheel übernehmen
 
+<div class="fragment" data-fragment-index="1">
+
 Ausschnitt aus `install_check`, gekürzt:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 ```yaml
 install_check:
@@ -313,7 +411,13 @@ install_check:
     - cd /tmp && /tmp/fresh/bin/python -c "import messwert.app; print('INSTALL_OK')"
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 `build_wheel` legt das Wheel vorher unter `dist/` ab. Im Log von `install_check` steht zuerst `Downloading artifacts for build_wheel`, am Ende `INSTALL_OK`. Mit `artifacts: false` würde der Job weiter auf `build_wheel` warten, das Wheel aber **nicht herunterladen**.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -323,7 +427,13 @@ install_check:
 
 ## `dependencies`
 
+<div class="fragment" data-fragment-index="1">
+
 Alternative im Stage-Modell, also ohne `needs`. `install_check` liegt dafür in der späteren Stage `verify`:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 ```yaml
 install_check:
@@ -335,7 +445,13 @@ install_check:
     - /tmp/fresh/bin/pip install --no-deps dist/*.whl
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Der Job wartet auf alle Jobs der früheren Stages und lädt nur die Artifacts von `build_wheel`. Die Jobs, deren Artifacts er lädt, müssen in früheren Stages liegen. **Verwenden Sie `needs` und `dependencies` nie im selben Job.**
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -345,6 +461,8 @@ Der Job wartet auf alle Jobs der früheren Stages und lädt nur die Artifacts vo
 
 ## Stage-Modell, `needs` oder `dependencies`?
 
+<div class="fragment" data-fragment-index="1">
+
 | Sie wollen … | Dann nutzen Sie |
 |---|---|
 | Auf alle Jobs einer früheren Stage warten | Stage-Modell |
@@ -352,7 +470,13 @@ Der Job wartet auf alle Jobs der früheren Stages und lädt nur die Artifacts vo
 | Im Stage-Modell nur die Artifacts bestimmter Jobs laden | `dependencies` |
 | Nur auf bestimmte Jobs warten und ihre Artifacts laden | `needs` mit `artifacts: true` |
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 Ohne `needs` oder eingeschränkte `dependencies` lädt ein Job standardmäßig die Artifacts aller früheren Stages. Verlassen Sie sich nicht auf Dateien, die nur zufällig da sind.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -362,7 +486,13 @@ Ohne `needs` oder eingeschränkte `dependencies` lädt ein Job standardmäßig d
 
 ## `needs: optional`
 
+<div class="fragment" data-fragment-index="1">
+
 Beispiel: Ein Doku-Check `docs` läuft nur in manchen Pipelines.
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 ```yaml
 build_wheel:
@@ -372,7 +502,13 @@ build_wheel:
       optional: true
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Fehlt `docs` in der Pipeline, wartet `build_wheel` nur auf `unit_tests`. Läuft `docs` mit, wartet `build_wheel` auch darauf. `optional` gilt nur für Jobs, die fehlen: Schlägt `docs` fehl, startet `build_wheel` nicht.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -382,6 +518,8 @@ Fehlt `docs` in der Pipeline, wartet `build_wheel` nur auf `unit_tests`. Läuft 
 
 ## Auslöser einer Pipeline und `CI_PIPELINE_SOURCE`
 
+<div class="fragment" data-fragment-index="1">
+
 | Auslöser | `CI_PIPELINE_SOURCE` | Genauer unterscheiden mit |
 |---|---|---|
 | Branch-Push | `push` | `CI_COMMIT_BRANCH` |
@@ -390,7 +528,13 @@ Fehlt `docs` in der Pipeline, wartet `build_wheel` nur auf `unit_tests`. Läuft 
 | Zeitplan | `schedule` | `CI_COMMIT_BRANCH` oder `CI_COMMIT_TAG` |
 | Start über die Oberfläche | `web` | `CI_COMMIT_BRANCH` oder `CI_COMMIT_TAG` |
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 `push` heißt nicht automatisch „Branch“: Auch ein Tag-Push meldet `push`. GitLab setzt diese Variablen selbst und wertet sie aus, bevor ein Job startet. Was ein Skript später setzt, ändert nichts daran, welche Pipeline und welche Jobs entstehen.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -400,7 +544,13 @@ Fehlt `docs` in der Pipeline, wartet `build_wheel` nur auf `unit_tests`. Läuft 
 
 ## `workflow:rules` im Projekt
 
+<div class="fragment" data-fragment-index="1">
+
 GitLab prüft die `workflow:rules` des Projekts von oben nach unten, die erste passende Regel entscheidet:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 ```yaml
 workflow:
@@ -412,7 +562,13 @@ workflow:
     - if: $CI_COMMIT_BRANCH
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Bei offenem MR ist `CI_OPEN_MERGE_REQUESTS` gefüllt: Ein Push startet dann **keine zweite Branch-Pipeline**. Die MR-Regel steht vor der `never`-Regel, deshalb entsteht die MR-Pipeline trotzdem. Die `never`-Regel fragt nicht nach dem Auslöser: Sie gilt für jede Branch-Pipeline, solange ein MR offen ist.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -422,7 +578,13 @@ Bei offenem MR ist `CI_OPEN_MERGE_REQUESTS` gefüllt: Ein Push startet dann **ke
 
 ## `workflow:rules`: Falltabelle
 
+<div class="fragment" data-fragment-index="1">
+
 So entscheiden die `workflow:rules` des Projekts:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 | Ereignis | Welche Pipeline entsteht |
 |---|---|
@@ -432,6 +594,8 @@ So entscheiden die `workflow:rules` des Projekts:
 | Push bei offenem MR | Nur die MR-Pipeline, keine zweite Branch-Pipeline |
 | Tag-Push `v1.0.0` | Tag-Pipeline mit allen Jobs |
 | Zeitplan, Branch ohne MR | Branch-Pipeline (letzte Regel) |
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -441,7 +605,13 @@ So entscheiden die `workflow:rules` des Projekts:
 
 ## Job-`rules`: Reihenfolge der Auswertung
 
+<div class="fragment" data-fragment-index="1">
+
 `workflow:rules` entscheiden nur, ob eine Pipeline entsteht. Welche Jobs darin laufen, legen die Job-`rules` fest. Auch dort entscheidet die erste passende Regel:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 ```yaml
 build_image:
@@ -454,7 +624,13 @@ build_image:
     - docker push "$IMAGE"
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Auf `main` passt die erste Regel, bei einem Tag die zweite. Auf einem Featurebranch passt keine Regel: **Der Job fehlt**, obwohl die Pipeline laufen darf. Mit ihm fehlt `container_smoke`: Der Job hat dieselben `rules`.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -464,7 +640,13 @@ Auf `main` passt die erste Regel, bei einem Tag die zweite. Auf einem Featurebra
 
 ## `rules:changes`
 
+<div class="fragment" data-fragment-index="1">
+
 Beispiel: Unit-Tests laufen im MR nur, wenn passende Dateien geändert sind:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 ```yaml
 unit_tests:
@@ -479,7 +661,13 @@ unit_tests:
     - pytest tests/unit
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Im MR vergleicht GitLab mit dem Zielbranch. `if` **und** `changes` müssen passen: Ändert der MR eine Datei unter `src/`, läuft der Job. Ändert er nur die README, fehlt der Job in der Pipeline.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -489,7 +677,13 @@ Im MR vergleicht GitLab mit dem Zielbranch. `if` **und** `changes` müssen passe
 
 ## `rules:changes`: die übrigen Pipelines
 
+<div class="fragment" data-fragment-index="1">
+
 Mit nur dieser einen Regel fehlt `unit_tests` in jeder Branch- und Tag-Pipeline. Eine zweite Regel holt den Job dorthin zurück:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 ```yaml
 unit_tests:
@@ -499,7 +693,13 @@ unit_tests:
     - if: $CI_PIPELINE_SOURCE != "merge_request_event"
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Im MR kann der Job weiterhin fehlen. `build_wheel` verlangt ihn per `needs`: Dort müsste `unit_tests` dann als `optional` stehen.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -509,11 +709,15 @@ Im MR kann der Job weiterhin fehlen. `build_wheel` verlangt ihn per `needs`: Dor
 
 ## Nebenwirkungen von `rules`
 
+<div class="fragment" data-fragment-index="1">
+
 | Änderung | Mögliche Folge |
 |---|---|
 | `unit_tests` läuft wegen einer Regel nicht mit | `build_wheel` verlangt per `needs` einen Job, der fehlt: Die Pipeline entsteht nicht |
 | Regel für MR-Pipelines fragt nur `CI_COMMIT_BRANCH` ab | Job fehlt in der MR-Pipeline: Dort ist `CI_COMMIT_BRANCH` leer |
 | `changes` ohne passende `if`-Bedingung verwenden | Bei neuen Branches und Pipelines ohne Push gilt `changes` immer als erfüllt: Der Job läuft mit |
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -522,6 +726,8 @@ Im MR kann der Job weiterhin fehlen. `build_wheel` verlangt ihn per `needs`: Dor
 <div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
 
 ## `when: always` als Schlussregel
+
+<div class="fragment" data-fragment-index="1">
 
 ```yaml
 # Gegenbeispiel: Projekt ohne workflow:rules
@@ -533,7 +739,13 @@ unit_tests:
     - pytest tests/unit
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 Die erste Regel lässt MR-Pipelines entstehen, die letzte nimmt den Job in **jede** Pipeline auf. Ohne `workflow:rules` startet ein Push bei offenem MR deshalb zwei Pipelines, eine für den Branch und eine für den MR: `unit_tests` läuft **doppelt**. Im Projekt verhindert das die `never`-Regel in den `workflow:rules`.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -543,7 +755,13 @@ Die erste Regel lässt MR-Pipelines entstehen, die letzte nimmt den Job in **jed
 
 ## `when: manual` und `allow_failure: false`
 
+<div class="fragment" data-fragment-index="1">
+
 Ein manueller Freigabe-Job (noch kein echtes Deployment):
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 ```yaml
 approve:
@@ -554,7 +772,13 @@ approve:
       allow_failure: false
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 `when: manual`: Der Job startet erst per Klick. Mit `allow_failure: false` hält die Pipeline an, bis jemand ihn startet. Eine echte Freigabe braucht klare Rechte und etwas Konkretes, das freigegeben wird. Das `echo` gibt nichts frei.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -564,14 +788,26 @@ approve:
 
 ## `include`
 
+<div class="fragment" data-fragment-index="1">
+
 ```yaml
 include:
   - local: .gitlab/ci/templates.yml
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 Die Pipeline entsteht aus **allen eingebundenen Dateien zusammen**. Wer nur die Hauptdatei reviewt, übersieht Änderungen an Image, Installation oder Cache-Key in `.gitlab/ci/templates.yml`.
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Binden Sie Vorlagen aus anderen Projekten ein, prüfen Sie auch, welche Version eingebunden wird.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -581,7 +817,13 @@ Binden Sie Vorlagen aus anderen Projekten ein, prüfen Sie auch, welche Version 
 
 ## `extends`: gemeinsame Jobvorlage
 
+<div class="fragment" data-fragment-index="1">
+
 Gekürzter Ausschnitt aus `.gitlab/ci/templates.yml` und `.gitlab-ci.yml`:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 ```yaml
 .python:
@@ -597,7 +839,13 @@ lint:
     - ruff format --check .
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Ein Punkt am Namensanfang heißt: Vorlage, kein eigener Job. `lint` holt sich daraus Image und Installation. Im Pipeline-Editor zeigt **Full configuration**, was GitLab daraus zusammensetzt.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -607,7 +855,13 @@ Ein Punkt am Namensanfang heißt: Vorlage, kein eigener Job. `lint` holt sich da
 
 ## `before_script` in der Vorlage `.python`
 
+<div class="fragment" data-fragment-index="1">
+
 Ausschnitt: Vorlage für alle Python-Jobs und der Job, der sie nicht nutzt:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 ```yaml
 .python:
@@ -621,7 +875,13 @@ install_check:
     - /tmp/fresh/bin/pip install -q -r requirements.txt
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Ein Job mit `extends: .python` installiert vor `script` die Werkzeuge aus `requirements-dev.txt`, also `ruff` und `pytest`. `install_check` übernimmt die Vorlage **bewusst nicht**: Er prüft das Wheel in einer frischen Umgebung, nur mit den Laufzeitpaketen.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -630,6 +890,8 @@ Ein Job mit `extends: .python` installiert vor `script` die Werkzeuge aus `requi
 <div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
 
 ## `extends`: Was passiert mit Listen?
+
+<div class="fragment" data-fragment-index="1">
 
 ```yaml
 .base:
@@ -640,9 +902,19 @@ test:
   script: [echo Test]
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 Es läuft nur **`echo Test`**, nicht vorher `echo Basis`. Verschachtelte Schlüssel wie `variables` führt GitLab Eintrag für Eintrag zusammen, aber eine neue `script`-Liste ersetzt die geerbte.
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Listen hängt GitLab nicht aneinander. Gemeinsame Schritte gehören deshalb in `before_script` oder in eine Skriptdatei.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -652,6 +924,8 @@ Listen hängt GitLab nicht aneinander. Gemeinsame Schritte gehören deshalb in `
 
 ## Fehlersuche: Pipeline und Jobs
 
+<div class="fragment" data-fragment-index="1">
+
 | Symptom | Zuerst prüfen |
 |---|---|
 | Keine Pipeline | Workflow und tatsächlichen Auslöser |
@@ -660,7 +934,13 @@ Listen hängt GitLab nicht aneinander. Gemeinsame Schritte gehören deshalb in `
 | Job wartet | Vorgänger, Runner-Zuordnung, freie Runner |
 | Job ist rot | Job-Log: wo das Skript abbricht |
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 CI Lint und das zusammengeführte YAML (**Full configuration** im Pipeline-Editor) zeigen, ob die Konfiguration stimmt. Ob die Werkzeuge da sind und der Job auf dem Runner durchläuft, zeigen sie nicht.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -670,11 +950,23 @@ CI Lint und das zusammengeführte YAML (**Full configuration** im Pipeline-Edito
 
 ## Rückblick Teil V
 
+<div class="fragment" data-fragment-index="1">
+
 **Pipeline ja/nein → welche Jobs → worauf warten sie**: drei getrennte Fragen.
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 Bei offenem MR testet genau eine Pipeline die Korrektur der Grenzwertprüfung: die MR-Pipeline. `build_wheel` wartet nur auf `lint` und `unit_tests`. Vorlagen helfen, solange das zusammengeführte YAML lesbar bleibt.
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Als Nächstes: welche Variablen ein Job bekommt und wie Jobs Dateien weitergeben.
+
+</div>
 </div></script></section></section><section ><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -692,13 +984,17 @@ Als Nächstes: welche Variablen ein Job bekommt und wie Jobs Dateien weitergeben
 
 ## Lernziele Teil VI
 
+<div class="fragment" data-fragment-index="1">
+
 Sie können:
 
-- &shy;<!-- .element: class="fragment" data-fragment-index="1" -->erklären, welchen Wert eine Variable im Job wirklich hat, 
-- &shy;<!-- .element: class="fragment" data-fragment-index="2" -->Zugriff auf Secrets und Maskierung im Log unterscheiden, 
-- &shy;<!-- .element: class="fragment" data-fragment-index="3" -->Cache und Artifacts unterscheiden und getrennt einsetzen. 
+</div>
 
-<div class="fragment" data-fragment-index="4">
+- &shy;<!-- .element: class="fragment" data-fragment-index="2" -->erklären, welchen Wert eine Variable im Job wirklich hat, 
+- &shy;<!-- .element: class="fragment" data-fragment-index="3" -->Zugriff auf Secrets und Maskierung im Log unterscheiden, 
+- &shy;<!-- .element: class="fragment" data-fragment-index="4" -->Cache und Artifacts unterscheiden und getrennt einsetzen. 
+
+<div class="fragment" data-fragment-index="5">
 
 Dafür nutzt das Projekt die Variable `APP_TITLE`, ein Dummy-Secret, einen pip-Cache und das Wheel, das ein zweiter Job in frischer Umgebung installiert.
 
@@ -712,7 +1008,13 @@ Dafür nutzt das Projekt die Variable `APP_TITLE`, ein Dummy-Secret, einen pip-C
 
 ## Vordefinierte Variablen: Pipeline-Quelle, Ref und Commit
 
+<div class="fragment" data-fragment-index="1">
+
 Im GitLab-Job:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 ```bash
 echo "$CI_PIPELINE_SOURCE"
@@ -720,7 +1022,15 @@ echo "$CI_COMMIT_REF_NAME"
 echo "$CI_COMMIT_SHORT_SHA"
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Beispielausgabe in der MR-Pipeline des Branches `doku/hinweis`:
+
+</div>
+
+<div class="fragment" data-fragment-index="4">
 
 ```text
 merge_request_event
@@ -728,7 +1038,13 @@ doku/hinweis
 <die ersten 8 Zeichen des Commits>
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="5">
+
 Diese drei Werte zeigen, welchen Stand der Job geprüft hat. Auf Ihrem Rechner gibt es diese Variablen nicht. Geben Sie zur Diagnose nicht alle Umgebungsvariablen aus: Darunter können Secrets sein.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -737,6 +1053,8 @@ Diese drei Werte zeigen, welchen Stand der Job geprüft hat. Auf Ihrem Rechner g
 <div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
 
 ## `variables` global und im Job
+
+<div class="fragment" data-fragment-index="1">
 
 ```yaml
 variables:
@@ -751,7 +1069,13 @@ show_variables:
     - echo "APP_TITLE = $APP_TITLE"
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 Die Variable im Job überschreibt die globale: Der Job gibt **`APP_TITLE = Messwertprüfung (aus dem Job)`** aus. `APP_TITLE` ist ein harmloser Anzeigetext, kein Secret.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -761,7 +1085,13 @@ Die Variable im Job überschreibt die globale: Der Job gibt **`APP_TITLE = Messw
 
 ## Rangfolge: Projektvariable vor YAML
 
+<div class="fragment" data-fragment-index="1">
+
 `APP_TITLE` ist an bis zu drei Stellen definiert. Der Job gibt aus:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 | `APP_TITLE` ist definiert … | Ausgabe im Job |
 |---|---|
@@ -769,9 +1099,19 @@ Die Variable im Job überschreibt die globale: Der Job gibt **`APP_TITLE = Messw
 | zusätzlich im Job | `Messwertprüfung (aus dem Job)` |
 | zusätzlich in den Projekteinstellungen | `Messwertprüfung (aus Projekteinstellung)` |
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Die Projektvariable aus **Settings › CI/CD › Variables** überschreibt beide YAML-Werte. Die Tabelle zeigt nur diese drei Fälle. Gruppen-, Instanz- und Pipeline-Variablen haben eigene Plätze in der Rangfolge:
 
+</div>
+
+<div class="fragment" data-fragment-index="4">
+
 [GitLab: welche Variable gewinnt](https://docs.gitlab.com/ci/variables/#cicd-variable-precedence)
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -781,13 +1121,21 @@ Die Projektvariable aus **Settings › CI/CD › Variables** überschreibt beide
 
 ## Variablen in Projekt, Gruppe, Instanz
 
+<div class="fragment" data-fragment-index="1">
+
 | Angelegt in | Gilt für | Geeignet für |
 |---|---|---|
 | Projekt | Dieses Projekt | Wert, den nur dieses Projekt braucht |
 | Gruppe | Alle Projekte der Gruppe | Wert, den mehrere Projekte teilen |
 | Instanz | Alle Projekte und Gruppen | Zentrale Einstellung der Admins |
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 Projekte erben Gruppenwerte. Ein Secret in der Gruppe bekommen deshalb alle ihre Projekte, auch die, die es nicht brauchen. Je höher die Ebene (Gruppe, Instanz), desto mehr Projekte trifft ein Fehler.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -797,6 +1145,8 @@ Projekte erben Gruppenwerte. Ein Secret in der Gruppe bekommen deshalb alle ihre
 
 ## Environment-Scope und `protected`
 
+<div class="fragment" data-fragment-index="1">
+
 ```yaml
 # Environment: benanntes Deploymentziel in GitLab. Hier nur benannt, kein Deploy.
 deploy_preview:
@@ -805,11 +1155,25 @@ deploy_preview:
   script: echo "Umgebung benannt"
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 Eine Variable mit dem Scope `review/*` bekommt nur ein Job, dessen `environment`-Name auf dieses Muster passt, hier `review/doku-hinweis`. `protected` ist etwas anderes: Es richtet sich nach geschützten **Branches oder Tags**. Den Scope legen Sie beim Anlegen der Variable fest.
+
+</div>
+
+<div class="fragment" data-fragment-index="3">
 
 Environment-Scope für Gruppenvariablen gibt es nur in Premium/Ultimate. Für Projektvariablen gibt es ihn in allen Tiers.
 
+</div>
+
+<div class="fragment" data-fragment-index="4">
+
 [GitLab: Gruppenvariablen und Environment-Scope](https://docs.gitlab.com/ci/variables/#for-a-group)
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -819,25 +1183,53 @@ Environment-Scope für Gruppenvariablen gibt es nur in Premium/Ultimate. Für Pr
 
 ## Protected Variables
 
+<div class="fragment" data-fragment-index="1">
+
 Eine geschützte Variable bekommen nur Pipelines auf geschützten Branches oder Tags.
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 Ein Featurebranch bekommt sie nicht automatisch. `TRAINING_DUMMY_SECRET` ist `protected`. `show_variables` gibt es aus:
+
+</div>
+
+<div class="fragment" data-fragment-index="3">
 
 ```yaml
 script:
   - echo "Secret    = $TRAINING_DUMMY_SECRET"
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="4">
+
 | Pipeline auf | Branch geschützt? | Ausgabe im Joblog |
 |---|---|---|
 | `main` | ja | `Secret    = [MASKED]` |
 | `test/secret` | nein | `Secret    =` |
 
+</div>
+
+<div class="fragment" data-fragment-index="5">
+
 Auf `main` kommt der Wert an, GitLab zeigt ihn nur maskiert. Auf dem ungeschützten Branch bleibt die Variable leer; der Job läuft trotzdem grün durch, weil eine leere Variable kein Fehler ist.
+
+</div>
+
+<div class="fragment" data-fragment-index="6">
 
 **Der Schutz legt fest, welche Pipelines den Wert bekommen.** Was der Code dann damit macht, prüft er nicht.
 
+</div>
+
+<div class="fragment" data-fragment-index="7">
+
 [GitLab: Protected Variables](https://docs.gitlab.com/ci/variables/#protect-a-cicd-variable)
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -847,7 +1239,13 @@ Auf `main` kommt der Wert an, GitLab zeigt ihn nur maskiert. Auf dem ungeschütz
 
 ## Bekommt der Job die Variable?
 
+<div class="fragment" data-fragment-index="1">
+
 Prüfen Sie zuerst, ob der Job den Wert überhaupt bekommt, dann, welcher Wert gewinnt. Eine Projektvariable kann Vorrang haben und für diesen Job trotzdem nicht gelten.
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 | Prüfung | Beispiel |
 |---|---|
@@ -855,6 +1253,8 @@ Prüfen Sie zuerst, ob der Job den Wert überhaupt bekommt, dann, welcher Wert g
 | Passendes Environment? | Variable hat den Scope `review/*`: nur für Jobs mit passendem `environment` |
 | Läuft der Job auf geschütztem Ref? | Variable ist `protected`: nur auf geschützten Branches und Tags |
 | Danach: Welcher Wert gewinnt? | Die Projektvariable überschreibt den Wert aus dem YAML |
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -864,13 +1264,17 @@ Prüfen Sie zuerst, ob der Job den Wert überhaupt bekommt, dann, welcher Wert g
 
 ## Geschützte Variablen und Runner in MR-Pipelines
 
+<div class="fragment" data-fragment-index="1">
+
 Damit eine MR-Pipeline geschützte Variablen und Runner bekommt, muss gelten:
 
-- &shy;<!-- .element: class="fragment" data-fragment-index="1" -->Quell- **und** Zielbranch sind geschützt und liegen im selben Projekt. 
-- &shy;<!-- .element: class="fragment" data-fragment-index="2" -->Wer die Pipeline startet, darf auf den Zielbranch pushen oder mergen. 
-- &shy;<!-- .element: class="fragment" data-fragment-index="3" -->Die Option **Allow merge request pipelines to access protected variables and runners** ist im Projekt eingeschaltet. 
+</div>
 
-<div class="fragment" data-fragment-index="4">
+- &shy;<!-- .element: class="fragment" data-fragment-index="2" -->Quell- **und** Zielbranch sind geschützt und liegen im selben Projekt. 
+- &shy;<!-- .element: class="fragment" data-fragment-index="3" -->Wer die Pipeline startet, darf auf den Zielbranch pushen oder mergen. 
+- &shy;<!-- .element: class="fragment" data-fragment-index="4" -->Die Option **Allow merge request pipelines to access protected variables and runners** ist im Projekt eingeschaltet. 
+
+<div class="fragment" data-fragment-index="5">
 
 MRs aus Forks bekommen diese Variablen und Runner so nicht. Lesen Sie fremden Pipelinecode, bevor er im Zielprojekt läuft.
 
@@ -886,13 +1290,29 @@ MRs aus Forks bekommen diese Variablen und Runner so nicht. Lesen Sie fremden Pi
 
 ## Maskierung im Job-Log
 
+<div class="fragment" data-fragment-index="1">
+
 Gibt ein Job den exakten Wert einer maskierten Variable aus, steht im Log `[MASKED]`, auf `main` etwa `Secret    = [MASKED]`. Schickt er den Wert verändert (z. B. Base64-kodiert) oder auf anderem Weg hinaus, hilft die Maskierung nicht.
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 Gegen bösartigen Jobcode hilft Maskierung nicht: Er kann jeden Wert lesen, den der Job bekommt, egal was im Log steht.
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Deshalb braucht jede Änderung an YAML, eingebundenen Dateien und Skripten ein Review, auch bei maskierten und geschützten Werten, besonders bei fremden Pipelines.
 
+</div>
+
+<div class="fragment" data-fragment-index="4">
+
 [GitLab: Variablensicherheit und Maskierung](https://docs.gitlab.com/ci/variables/#cicd-variable-security)
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -902,13 +1322,21 @@ Deshalb braucht jede Änderung an YAML, eingebundenen Dateien und Skripten ein R
 
 ## `masked`, `hidden`, `protected`
 
+<div class="fragment" data-fragment-index="1">
+
 | Einstellung | Frage | Schützt nicht vor … |
 |---|---|---|
 | `masked` | Wird der Wert im Log ersetzt? | Code, der den Wert verändert ausgibt oder verschickt |
 | `hidden` | Zeigt die UI den Wert nach dem Speichern noch an? | Lesen im Job |
 | `protected` | Bekommt dieser Ref den Wert? | Unsicherem Pipelinecode |
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 Echte Secrets brauchen zusätzlich minimale Rechte, kurze Laufzeit, Rotation und Kontrolle darüber, welcher Code läuft.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -918,7 +1346,13 @@ Echte Secrets brauchen zusätzlich minimale Rechte, kurze Laufzeit, Rotation und
 
 ## File-Variablen
 
+<div class="fragment" data-fragment-index="1">
+
 Eine Variable vom Typ **File** legen Sie in den Projekteinstellungen an. GitLab schreibt ihren Inhalt für den Job in eine temporäre Datei:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 | Bestandteil | Dummy-Beispiel |
 |---|---|
@@ -926,7 +1360,13 @@ Eine Variable vom Typ **File** legen Sie in den Projekteinstellungen an. GitLab 
 | Gespeicherter Inhalt | Zwei fiktive Zeilen: `FIKTIVE_KURSDATEI`, `Zeile 2` |
 | Wert der Variable im Job | Pfad zu einer temporären Datei, z. B. `/builds/schulung/messwert-tnXX.tmp/TRAINING_FILE` |
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Ein Werkzeug bekommt also einen **Dateipfad**, nicht den Inhalt. Eine normale YAML-Variable wird durch Name oder Endung nicht zur File-Variable.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -936,7 +1376,13 @@ Ein Werkzeug bekommt also einen **Dateipfad**, nicht den Inhalt. Eine normale YA
 
 ## File-Variable im Job lesen
 
+<div class="fragment" data-fragment-index="1">
+
 Ausschnitt aus `show_variables`:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 ```yaml
 show_variables:
@@ -946,9 +1392,19 @@ show_variables:
     - cat "$TRAINING_FILE"
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 `echo` zeigt den Pfad, erst `cat` liest den Inhalt. Liegt in der Datei später ein echtes Zertifikat, prüft `cat` nicht, ob es gültig ist oder die Anmeldung klappt.
 
+</div>
+
+<div class="fragment" data-fragment-index="4">
+
 Secret-Dateien gehören nicht in Cache, Wheel oder Diagnose-Artifacts.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -958,7 +1414,13 @@ Secret-Dateien gehören nicht in Cache, Wheel oder Diagnose-Artifacts.
 
 ## Ausgabe von `show_variables`
 
+<div class="fragment" data-fragment-index="1">
+
 Auf `main`, mit Secret und File-Variable, ohne Projektvariable `APP_TITLE`:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 ```text
 APP_TITLE = Messwertprüfung (aus dem Job)
@@ -968,7 +1430,13 @@ FIKTIVE_KURSDATEI
 Zeile 2
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Auf einem ungeschützten Branch bleibt nur die Secret-Zeile leer. Um zu prüfen, ob das Secret ankommt, brauchen Sie den echten Wert nicht zu sehen.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -978,15 +1446,27 @@ Auf einem ungeschützten Branch bleibt nur die Secret-Zeile leer. Um zu prüfen,
 
 ## Externe Secret-Manager
 
+<div class="fragment" data-fragment-index="1">
+
 | CI-Variable | Externer Secret-Manager |
 |---|---|
 | GitLab gibt dem Job den gespeicherten Wert | Job holt sich einen bestimmten Wert ab |
 | GitLab-Einstellungen regeln, wer ihn bekommt | Der Secret-Manager prüft zusätzlich, welcher Job fragt und was er lesen darf |
 | Schutz und Review bleiben nötig | Schutz und Review bleiben nötig |
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 Die eingebauten GitLab-Integrationen gibt es nur in **Premium/Ultimate**. Mit einem ID-Token, das GitLab ausstellt, weist sich ein Job beim Secret-Manager aus. Die Policy dort müssen Sie trotzdem eng fassen.
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 [GitLab: External Secrets](https://docs.gitlab.com/ci/secrets/)
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -996,10 +1476,14 @@ Die eingebauten GitLab-Integrationen gibt es nur in **Premium/Ultimate**. Mit ei
 
 ## Cache und Artifacts im Vergleich
 
-<img src="figs/cache-artifacts.png" alt="Artifacts übergeben Jobausgaben; Cache ermöglicht die optionale Wiederverwendung von pip-Paketen." style="object-fit: scale-down">
+<img src="figs/cache-artifacts.png" alt="Artifacts übergeben Jobausgaben; Cache ermöglicht die optionale Wiederverwendung von pip-Paketen." style="object-fit: scale-down" class="fragment" data-fragment-index="1">
 
+
+<div class="fragment" data-fragment-index="2">
 
 **Der Cache darf fehlen.** Das Wheel muss dagegen als Artifact aus dem Job `build_wheel` kommen.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1009,14 +1493,26 @@ Die eingebauten GitLab-Integrationen gibt es nur in **Premium/Ultimate**. Mit ei
 
 ## `.cache/pip` als Cache, `dist/` als Artifact
 
+<div class="fragment" data-fragment-index="1">
+
 Im Projekt installiert jeder Job mit `extends: .python` die festgeschriebenen Versionen aus `requirements-dev.txt`.
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 | Ordner | Verwendung | Zweck |
 |---|---|---|
 | `.cache/pip` | Cache aller `.python`-Jobs | Downloads aus einem früheren Lauf wiederverwenden |
 | `dist/` | Artifact von `build_wheel` | Wheel an spätere Jobs weitergeben |
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Findet ein Job keinen Cache, lädt `pip` dieselben Versionen neu herunter. Das Wheel bekommen spätere Jobs nur über das Artifact, egal ob es einen Cache gab.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1025,6 +1521,8 @@ Findet ein Job keinen Cache, lädt `pip` dieselben Versionen neu herunter. Das W
 <div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
 
 ## Cache-Key aus der Abhängigkeitsdatei
+
+<div class="fragment" data-fragment-index="1">
 
 ```yaml
 .python:
@@ -1036,9 +1534,19 @@ Findet ein Job keinen Cache, lädt `pip` dieselben Versionen neu herunter. Das W
     paths: [.cache/pip]
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 `requirements-dev.txt` legt die Werkzeuge fest, z. B. `pytest==9.2.0`. Der Key benennt den Cache: Ändert ein Commit diese Datei, entsteht ein neuer, leerer Cache. Auf geschützten Branches hängt GitLab `-protected` an: `main` und Featurebranches teilen sich keinen Cache.
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 GitLab cacht nur Pfade im Projektordner, deshalb zeigt `PIP_CACHE_DIR` dorthin. Die Python-Version steckt nicht im Key: Nach einem Imagewechsel gilt derselbe Cache weiter.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1048,15 +1556,27 @@ GitLab cacht nur Pfade im Projektordner, deshalb zeigt `PIP_CACHE_DIR` dorthin. 
 
 ## Cache-Policy: `pull`, `push`, `pull-push`
 
+<div class="fragment" data-fragment-index="1">
+
 | Policy | Vorhandenen Cache lesen | Eigenen Cache hochladen |
 |---|---|---|
 | `pull` | Ja | Nein |
 | `push` | Nein | Ja |
 | `pull-push` | Ja | Ja |
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 Standard ist `pull-push`. Schreiben mehrere Jobs parallel in denselben Key, können sie sich gegenseitig stören. Einfacher zu durchschauen: Ein Job schreibt, die anderen lesen nur.
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Dass die Pipeline dadurch schneller wird, ist nicht garantiert.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1066,6 +1586,8 @@ Dass die Pipeline dadurch schneller wird, ist nicht garantiert.
 
 ## Cache-Miss: Treffer oder nicht
 
+<div class="fragment" data-fragment-index="1">
+
 | Situation | Was es bedeutet |
 |---|---|
 | `Successfully extracted cache` | Treffer, `pip` lädt nichts herunter |
@@ -1074,7 +1596,13 @@ Dass die Pipeline dadurch schneller wird, ist nicht garantiert.
 | Andere Version im Cache | Unkritisch: `pip` installiert die Version aus `requirements-dev.txt` |
 | Anderer Runner findet lokalen Cache nicht | Prüfen, wo der Cache gespeichert ist |
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 Der Kursrunner speichert den Cache lokal und getrennt je Slot: Derselbe Job kann ihn einmal treffen und einmal verfehlen und ist beide Male grün.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1084,6 +1612,8 @@ Der Kursrunner speichert den Cache lokal und getrennt je Slot: Derselbe Job kann
 
 ## Fallback-Keys
 
+<div class="fragment" data-fragment-index="1">
+
 ```yaml
 # Beispiel
 cache:
@@ -1092,7 +1622,13 @@ cache:
   paths: [.cache/pip]
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 Ein Fallback-Key nennt einen zweiten Cache für den Fall, dass der erste fehlt: Ein neuer Branch startet hier mit dem Cache von `main`. Das lohnt sich nur, wenn der alte Inhalt noch passt.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1102,7 +1638,13 @@ Ein Fallback-Key nennt einen zweiten Cache für den Fall, dass der erste fehlt: 
 
 ## Wheel-Artifact: Inhalt und Prüfung
 
+<div class="fragment" data-fragment-index="1">
+
 `python -m build --wheel` erzeugt `dist/messwert-1.0.0-py3-none-any.whl`.
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 | Im Wheel | Nicht im Wheel |
 |---|---|
@@ -1110,7 +1652,13 @@ Ein Fallback-Key nennt einen zweiten Cache für den Fall, dass der erste fehlt: 
 | HTML-Templates über `package-data` | Tests |
 | Liste der Abhängigkeiten aus `pyproject.toml`, nicht die Pakete selbst | Secret-/Environment-Dateien |
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 `install_check` installiert das Wheel in einer frischen Umgebung und importiert `messwert.app`. **Dass `python -m build` durchläuft, reicht nicht:** Fehlt `package-data`, fehlen die Templates. Der Import klappt trotzdem, und erst `container_smoke` wird rot.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1120,7 +1668,13 @@ Ein Fallback-Key nennt einen zweiten Cache für den Fall, dass der erste fehlt: 
 
 ## `expire_in`: Lebensdauer von Artifacts
 
+<div class="fragment" data-fragment-index="1">
+
 Ausschnitt aus dem Job `build_wheel`:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 ```yaml
 build_wheel:
@@ -1129,9 +1683,19 @@ build_wheel:
     expire_in: 1 week
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Die eine Woche hat das Projekt festgelegt. Das ist kein GitLab-Default und keine Zusage, dass das Wheel dauerhaft archiviert wird.
 
+</div>
+
+<div class="fragment" data-fragment-index="4">
+
 Klären Sie einzeln: Wie lange heben wir das Wheel auf? Wer braucht es nach Ablauf noch? Wie stellen wir es wieder her? Neu bauen aus einem versionierten Stand ist zuverlässiger als ein alter Download.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1141,11 +1705,21 @@ Klären Sie einzeln: Wie lange heben wir das Wheel auf? Wer braucht es nach Abla
 
 ## Wheel in `install_check` prüfen
 
+<div class="fragment" data-fragment-index="1">
+
 `install_check` installiert `dist/*.whl`. Mit `artifacts: false` im `needs`-Eintrag wird er rot:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 ```text
 WARNING: Requirement 'dist/*.whl' looks like a filename, but the file does not exist
 ```
+
+</div>
+
+<div class="fragment" data-fragment-index="3">
 
 | Symptom | Prüfung |
 |---|---|
@@ -1154,7 +1728,13 @@ WARNING: Requirement 'dist/*.whl' looks like a filename, but the file does not e
 | Import klappt, Templates fehlen | `package-data` in `pyproject.toml` |
 | Wheel enthält alten Stand | Mit aktuellem Quellstand vergleichen |
 
+</div>
+
+<div class="fragment" data-fragment-index="4">
+
 Ein `echo "Paket erhalten"` prüft davon nichts.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1164,13 +1744,29 @@ Ein `echo "Paket erhalten"` prüft davon nichts.
 
 ## Abgelaufene und gelöschte Artifacts
 
+<div class="fragment" data-fragment-index="1">
+
 Ist ein benötigtes Artifact gelöscht oder abgelaufen, kann der Job fehlschlagen, der es braucht.
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 Hat ein früherer Job dagegen **gar kein Artifact erzeugt**, liegt der Fehler in dessen Skript oder `paths`. Die GitLab-Doku behandelt beide Fälle getrennt.
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Starten Sie den Job neu, der das Artifact erzeugt, oder ändern Sie, wie es übergeben wird. Ein zufällig vorhandener Cache ersetzt nicht das Wheel-Artifact aus dem richtigen Commit.
 
+</div>
+
+<div class="fragment" data-fragment-index="4">
+
 [GitLab: `dependencies` und abgelaufene Artifacts](https://docs.gitlab.com/ci/yaml/#dependencies)
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1180,11 +1776,23 @@ Starten Sie den Job neu, der das Artifact erzeugt, oder ändern Sie, wie es übe
 
 ## Rückblick Teil VI
 
+<div class="fragment" data-fragment-index="1">
+
 Bei einer Variable: Wo ist sie definiert, bekommt der Job sie, welcher Wert gewinnt? Bei einem Secret auch: Welcher Code darf laufen?
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 Bei Dateien: Kommt die richtige Datei an, stimmt ihr Inhalt, wie lange bleibt sie verfügbar? Der Cache spart Zeit, Artifacts reichen Dateien weiter.
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Im nächsten Teil geht es darum, wo Jobs laufen, und um Tests und Reports.
+
+</div>
 </div></script></section></section><section ><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1202,11 +1810,15 @@ Im nächsten Teil geht es darum, wo Jobs laufen, und um Tests und Reports.
 
 ## Lernziele Teil VII
 
+<div class="fragment" data-fragment-index="1">
+
 Sie können:
 
-- &shy;<!-- .element: class="fragment" data-fragment-index="1" -->sagen, wer einen Runner nutzt, wie er Jobs ausführt und was er darf, 
-- &shy;<!-- .element: class="fragment" data-fragment-index="2" -->Jobimage, Service, Builder und Produktimage unterscheiden, 
-- &shy;<!-- .element: class="fragment" data-fragment-index="3" -->Tests, Exit-Code, JUnit, Coverage und Image-Digest einzeln auswerten.
+</div>
+
+- &shy;<!-- .element: class="fragment" data-fragment-index="2" -->sagen, wer einen Runner nutzt, wie er Jobs ausführt und was er darf, 
+- &shy;<!-- .element: class="fragment" data-fragment-index="3" -->Jobimage, Service, Builder und Produktimage unterscheiden, 
+- &shy;<!-- .element: class="fragment" data-fragment-index="4" -->Tests, Exit-Code, JUnit, Coverage und Image-Digest einzeln auswerten.
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1216,13 +1828,21 @@ Sie können:
 
 ## Runner-Scopes: Instance, Group, Project
 
+<div class="fragment" data-fragment-index="1">
+
 | Runner-Scope | Zuordnung | Frage für das Projekt |
 |---|---|---|
 | Instance | Alle Projekte der Instanz | Mit wem teilen wir uns den Runner? |
 | Group | Gruppe und Untergruppen | Wer darf Jobcode darauf laufen lassen? |
 | Project | Nur zugewiesene Projekte | Dürfen weitere Projekte ihn nutzen? |
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 Auch ein Project-Runner kann mehreren Projekten dienen. **Der Host gehört Ihnen damit nicht allein.**
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1232,13 +1852,21 @@ Auch ein Project-Runner kann mehreren Projekten dienen. **Der Host gehört Ihnen
 
 ## Executor: Shell, Docker, Kubernetes
 
+<div class="fragment" data-fragment-index="1">
+
 | Executor | Wo der Job läuft | Worauf es für den Job ankommt |
 |---|---|---|
 | Shell | Prozess auf dem Host | Werkzeuge und Rechte des Hosts |
 | Docker | Im Jobcontainer | Image, Mounts und Privilegien |
 | Kubernetes | Pod mit Build-/Servicecontainern | Clusterrechte und Policies |
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 Scope und Executor wählen Sie unabhängig. Derselbe Testjob läuft daher je nach Runner gut abgeschottet oder nicht.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1248,13 +1876,21 @@ Scope und Executor wählen Sie unabhängig. Derselbe Testjob läuft daher je nac
 
 ## Runner-Registrierung mit Authentication-Token
 
+<div class="fragment" data-fragment-index="1">
+
 So registrieren Sie einen Runner:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 1. &shy;<!-- .element: class="fragment" data-fragment-index="1" -->Runner in der GitLab-UI oder per API anlegen. 
 1. &shy;<!-- .element: class="fragment" data-fragment-index="2" -->Token kopieren: Es beginnt mit `glrt-`. 
 1. &shy;<!-- .element: class="fragment" data-fragment-index="3" -->Runner auf dem Host mit dem Token registrieren, Executor einstellen. 
 
-<div class="fragment" data-fragment-index="4">
+</div>
+
+<div class="fragment" data-fragment-index="3">
 
 ```bash
 gitlab-runner register --token "$RUNNER_AUTHENTICATION_TOKEN"
@@ -1274,6 +1910,8 @@ Der Befehl meldet den Runner nur an. Welche Projekte ihn nutzen und ob er gesch�
 
 ## Runner-Tags
 
+<div class="fragment" data-fragment-index="1">
+
 ```yaml
 # Gegenbeispiel: ein Tag, den kein Runner hat
 integration_tests:
@@ -1281,13 +1919,23 @@ integration_tests:
   tags: [absichtlich-kein-runner]
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 | Runner-Tags | Nimmt er `integration_tests`? |
 |---|---|
 | `docker` (Kursrunner `schulung-docker-runner`) | Nein, der Job bleibt `pending` |
 | `absichtlich-kein-runner` | Ja |
 | `absichtlich-kein-runner, linux` | Ja |
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Ohne `tags` im Job nimmt der Kursrunner den Job. Ein Runner braucht alle Tags des Jobs, muss dem Projekt zugeordnet, für den Ref erlaubt und frei sein. Runner-Tags sind keine Git-Tags und sagen nichts über Sicherheit.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1297,6 +1945,8 @@ Ohne `tags` im Job nimmt der Kursrunner den Job. Ein Runner braucht alle Tags de
 
 ## Diagnose: Job bleibt `pending`
 
+<div class="fragment" data-fragment-index="1">
+
 | Was Sie sehen | Was Sie prüfen |
 |---|---|
 | Kein passender Runner angezeigt | Dem Projekt zugeordnet und online? |
@@ -1304,7 +1954,13 @@ Ohne `tags` im Job nimmt der Kursrunner den Job. Ein Runner braucht alle Tags de
 | Geschützter Runner, Ref passt nicht | Schutzregeln prüfen |
 | Passender Runner ist belegt | Freie Slots und Warteschlange |
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 Solange der Job wartet, startet sein Skript nicht, und es gibt kein Log. An einem Fehler in `validation.py` kann es nicht liegen.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1314,11 +1970,23 @@ Solange der Job wartet, startet sein Skript nicht, und es gibt kein Log. An eine
 
 ## `needs` und Runner-Kapazität
 
+<div class="fragment" data-fragment-index="1">
+
 Mit `needs` wartet ein Job nur auf die Jobs, die er braucht. Ob er dann sofort startet, hängt an freien Runnern.
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 Eine Testmatrix (`parallel:matrix`) macht aus einem Job mehrere. Gibt es zu wenig Slots, laufen sie nacheinander statt parallel.
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 **Drei Zustände:** wartet auf andere Jobs, wartet auf einen Runner, läuft.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1328,10 +1996,14 @@ Eine Testmatrix (`parallel:matrix`) macht aus einem Job mehrere. Gibt es zu weni
 
 ## Zielbild der Runner-Umgebung
 
-<img src="figs/runner-trust.png" alt="Zielbild: kontrollierter Runner-Zugriff, begrenzter Jobcontainer, Builder, Registry und Logs." style="object-fit: scale-down">
+<img src="figs/runner-trust.png" alt="Zielbild: kontrollierter Runner-Zugriff, begrenzter Jobcontainer, Builder, Registry und Logs." style="object-fit: scale-down" class="fragment" data-fragment-index="1">
 
+
+<div class="fragment" data-fragment-index="2">
 
 Das Bild zeigt, wie eine abgesicherte Runner-Umgebung aufgebaut sein soll. Ihr echter Runner kann anders konfiguriert sein. Jobcode darf alles, was der Runner ihm erlaubt.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1341,6 +2013,8 @@ Das Bild zeigt, wie eine abgesicherte Runner-Umgebung aufgebaut sein soll. Ihr e
 
 ## Vier Containerrollen im Projekt
 
+<div class="fragment" data-fragment-index="1">
+
 | Rolle | Im Projekt | Aufgabe |
 |---|---|---|
 | Jobimage | `python:3.13-slim` | Python und pip, Werkzeuge aus `requirements-dev.txt` |
@@ -1348,7 +2022,13 @@ Das Bild zeigt, wie eine abgesicherte Runner-Umgebung aufgebaut sein soll. Ihr e
 | Builder | `docker:27` mit Service `docker:27-dind` | Baut das Image aus dem Dockerfile |
 | Produktimage | Messwertprüfung (`uvicorn`) | Die Anwendung selbst, erreichbar auf Port `8080` |
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 `docker build` braucht einen Docker-Daemon, und im Jobcontainer läuft nicht automatisch einer. Auch mit `image: docker:27` fehlt er noch: Im Projekt liefert ihn der Service `docker:27-dind`.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1358,7 +2038,13 @@ Das Bild zeigt, wie eine abgesicherte Runner-Umgebung aufgebaut sein soll. Ihr e
 
 ## Service-Alias im Jobnetz
 
+<div class="fragment" data-fragment-index="1">
+
 Job mit Service (Ausschnitt):
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 ```yaml
 integration_tests:
@@ -1374,7 +2060,13 @@ integration_tests:
     - pytest tests/integration --junitxml=report-integration.xml
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Unter dem Alias `db` erreicht der Job den Servicecontainer, `localhost` klappt beim Docker-Executor nicht. `POSTGRES_…` liest der Service beim Start, `DATABASE_URL` die Anwendung. Die Testwerkzeuge stammen aus dem Jobimage.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1384,7 +2076,13 @@ Unter dem Alias `db` erreicht der Job den Servicecontainer, `localhost` klappt b
 
 ## Testdaten des Integrationstests
 
+<div class="fragment" data-fragment-index="1">
+
 Der Test lädt diese CSV hoch:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 ```text
 device,value,lower,upper,unit
@@ -1393,7 +2091,13 @@ Sensor-B,23.1,19,21,C
 Sensor-C,19,19,21,C
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Sensor-B liegt außerhalb. Sensor-C liegt mit 19 genau auf der unteren Grenze und gehört zum Bereich. Der Test erwartet deshalb drei Messwerte, davon **einen außerhalb**.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1403,7 +2107,13 @@ Sensor-B liegt außerhalb. Sensor-C liegt mit 19 genau auf der unteren Grenze un
 
 ## Integrationstest: speichern und wieder lesen
 
+<div class="fragment" data-fragment-index="1">
+
 Der Integrationstest prüft den Weg durch API und PostgreSQL:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 ```python
 def test_report_is_saved_and_read_back(client):
@@ -1417,7 +2127,13 @@ def test_report_is_saved_and_read_back(client):
     assert read_back["ausserhalb"] == 1
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 PostgreSQL startet nicht sofort: Die Anwendung versucht deshalb bis zu 30-mal im Sekundenabstand, die Datenbank zu erreichen. Der Test verlangt den gespeicherten Bericht mit Dateiname und Zählung zurück. **Eine Datenbank, die nur antwortet, reicht nicht.**
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1427,14 +2143,26 @@ PostgreSQL startet nicht sofort: Die Anwendung versucht deshalb bis zu 30-mal im
 
 ## `integration_tests` rot: falscher Host oder Fehler am Grenzwert
 
+<div class="fragment" data-fragment-index="1">
+
 | Änderung | Ausgabe in `integration_tests` | Ursache |
 |---|---|---|
 | Host `datenbank` statt `db` | `failed to resolve host 'datenbank'`, `6 errors` nach ca. 30 s | Service unter diesem Namen nicht erreichbar |
 | `lower < value` statt `lower <= value` | `assert 2 == 1`: Sensor-C liegt genau auf der Grenze und zählt als außerhalb | Programm entscheidet den Grenzwert falsch |
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 Ein Verbindungsfehler tritt schon beim Vorbereiten des Tests auf und erscheint als `error`. Ein falsch entschiedener Messwert erscheint als `failed`.
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Der Integrationstest findet den Fehler am Grenzwert auch. Die Unit-Tests ersetzt er nicht: Sie finden ihn schneller und ohne Datenbank. Der Endpunkt `/ready` sagt nur, dass die Datenbank erreichbar ist.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1444,15 +2172,27 @@ Der Integrationstest findet den Fehler am Grenzwert auch. Die Unit-Tests ersetzt
 
 ## Docker-in-Docker, Socket-Binding, Rootless BuildKit
 
+<div class="fragment" data-fragment-index="1">
+
 | Weg zum Image-Build | Welcher Docker-Daemon baut | Zu klären |
 |---|---|---|
 | Klassisches Docker-in-Docker | Separater Daemon als Service | Läuft privilegiert, gefährdet den Host |
 | Docker-Socket-Binding | Host-Daemon | Job steuert Container des Hosts |
 | Rootless BuildKit | Eigenständiger Builder ohne Host-Docker-Socket | Erlaubte Kernel-/Security-Rechte |
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 Keiner der Wege ist immer der sicherste. Klären Sie für jeden Runner, was er darf und welchen Host er betrifft.
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 [GitLab: Docker-Build-Wege und Risiken](https://docs.gitlab.com/ci/docker/using_docker_build/)
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1461,6 +2201,8 @@ Keiner der Wege ist immer der sicherste. Klären Sie für jeden Runner, was er d
 <div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
 
 ## Image-Build im Kurs: Docker-in-Docker
+
+<div class="fragment" data-fragment-index="1">
 
 ```yaml
 build_image:
@@ -1476,7 +2218,13 @@ build_image:
     - docker push "$IMAGE"
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 `docker:27-dind` startet einen eigenen Daemon nur für diesen Job. Das geht nur, weil der Kursrunner `privileged` läuft. Die `rules` (hier weggelassen) lassen den Job nur auf `main` und bei Tags zu. Nach dem Push **liegt das Image in der Registry**. Ob es startet, wissen Sie noch nicht.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1486,7 +2234,13 @@ build_image:
 
 ## Produktion: rootless bauen
 
+<div class="fragment" data-fragment-index="1">
+
 Ein privilegierter Container kann fast alles auf dem Host, und wer YAML oder Dockerfile ändert, bekommt diese Rechte mit. Rootless BuildKit baut ohne `privileged` und ohne Host-Socket, braucht aber andere Kernelrechte.
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 | Prüfen Sie | Worauf es ankommt |
 |---|---|
@@ -1495,7 +2249,13 @@ Ein privilegierter Container kann fast alles auf dem Host, und wer YAML oder Doc
 | Prozessisolation (BuildKit-Flag) | `--oci-worker-no-process-sandbox` trennt Buildprozesse schlechter |
 | Wer den Code ändert | Ungeprüfte MRs nie auf privilegierten Runnern oder mit Secrets |
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 [GitLab: BuildKit-Voraussetzungen](https://docs.gitlab.com/ci/docker/using_buildkit/) · [BuildKit: Risiken des Flags](https://github.com/moby/buildkit/blob/master/docs/rootless.md#containerized-deployment) · [GitLab: Socket-Binding](https://docs.gitlab.com/ci/docker/using_docker_build/#known-issues-with-docker-socket-binding)
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1505,6 +2265,8 @@ Ein privilegierter Container kann fast alles auf dem Host, und wer YAML oder Doc
 
 ## Registry-Variablen: Adresse, Zugang, Imagepfad
 
+<div class="fragment" data-fragment-index="1">
+
 | Variable | Bedeutung |
 |---|---|
 | `CI_REGISTRY` | Adresse der Registry |
@@ -1512,7 +2274,13 @@ Ein privilegierter Container kann fast alles auf dem Host, und wer YAML oder Doc
 | `CI_REGISTRY_IMAGE` | Imagepfad des Projekts |
 | `CI_COMMIT_SHORT_SHA` | Commit-Kürzel als Image-Tag |
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 Bei Self-Managed muss ein Admin die Registry einschalten und erreichbar machen. Dass sie zu Ihrem Tier gehört, heißt nicht, dass sie bei Ihnen läuft.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1522,16 +2290,32 @@ Bei Self-Managed muss ein Admin die Registry einschalten und erreichbar machen. 
 
 ## Registry-Anmeldung ohne Passwortargument
 
+<div class="fragment" data-fragment-index="1">
+
 Aus dem Skript von `build_image`, auf zwei Zeilen umbrochen:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 ```bash
 echo "$CI_REGISTRY_PASSWORD" |
   docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 `CI_REGISTRY_PASSWORD` ist das Job-Token: Es gilt nur, solange der Job läuft. Im Log steht danach `Login Succeeded`. Docker legt die Anmeldung in einer Authdatei im Jobcontainer ab. Diese Datei gehört weder ins Repository noch ins Produktimage.
 
+</div>
+
+<div class="fragment" data-fragment-index="4">
+
 Mit `--password-stdin` steht das Passwort nicht in der Befehlszeile. Prüfen Sie trotzdem Debugausgaben sowie Zugriffsrechte und Aufbewahrung der Authdatei.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1541,7 +2325,13 @@ Mit `--password-stdin` steht das Passwort nicht in der Befehlszeile. Prüfen Sie
 
 ## Dockerfile des Produktimages
 
+<div class="fragment" data-fragment-index="1">
+
 Nach `FROM python:3.13-slim` und `ARG BUILD_COMMIT`:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 ```dockerfile
 WORKDIR /app
@@ -1554,9 +2344,19 @@ EXPOSE 8080
 CMD ["uvicorn", "messwert.app:app", "--host", "0.0.0.0", "--port", "8080"]
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Das Image installiert das Wheel aus `build_wheel`, nicht den Checkout: `dist/` kommt über `needs` als Artifact in den Job `build_image`. `EXPOSE` notiert den Port nur, nach außen geöffnet ist er damit nicht. Der Prozess läuft als `uid=10001`, nicht als root.
 
+</div>
+
+<div class="fragment" data-fragment-index="4">
+
 [Docker: EXPOSE](https://docs.docker.com/reference/dockerfile/#expose)
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1566,15 +2366,31 @@ Das Image installiert das Wheel aus `build_wheel`, nicht den Checkout: `dist/` k
 
 ## Image-Tag und Digest
 
+<div class="fragment" data-fragment-index="1">
+
 Aus dem Log von `build_image`:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 ```text
 Gebaut und gepusht gitlab.devadze.de:5050/schulung/messwert-tnXX@sha256:c3e9f0fd…
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Der Image-Tag in der Registry ist `CI_COMMIT_SHORT_SHA`, z. B. `8d247922`. Über den Commit im Tag finden Sie vom Image zurück zum Code. Einen Image-Tag kann man aber auf ein anderes Image umhängen. Notieren Sie bei der Übergabe deshalb den **Digest**: Er ist die Prüfsumme des Inhalts. Mit `latest` allein finden Sie den gebauten Stand nicht sicher wieder.
 
+</div>
+
+<div class="fragment" data-fragment-index="4">
+
 [Docker: Image-Digests](https://docs.docker.com/dhi/explore/security-concepts/digests/)
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1584,7 +2400,13 @@ Der Image-Tag in der Registry ist `CI_COMMIT_SHORT_SHA`, z. B. `8d247922`. Über
 
 ## Digest an spätere Jobs übergeben
 
+<div class="fragment" data-fragment-index="1">
+
 Aus dem Skript von `build_image`:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 ```yaml
     - DIGEST=$(docker inspect --format '{{index .RepoDigests 0}}' "$IMAGE")
@@ -1594,7 +2416,13 @@ Aus dem Skript von `build_image`:
       dotenv: image.env
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 `reports:dotenv` liest die Datei ein: `IMAGE_DIGEST` steht danach in späteren Jobs als Variable bereit.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1603,6 +2431,8 @@ Aus dem Skript von `build_image`:
 <div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
 
 ## Smoke-Test gegen das gebaute Image
+
+<div class="fragment" data-fragment-index="1">
 
 ```yaml
 container_smoke:
@@ -1620,7 +2450,13 @@ container_smoke:
     - pytest tests/smoke --junitxml=report-smoke.xml
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 Das Image läuft als Service `app` neben einer frischen Datenbank. Der Test lädt eine CSV hoch, liest den Bericht und ruft die Oberfläche ab: `3 passed`. Geprüft wird das laufende Image, nicht der Quelltext.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1630,6 +2466,8 @@ Das Image läuft als Service `app` neben einer frischen Datenbank. Der Test läd
 
 ## Die vier Testarten im Projekt
 
+<div class="fragment" data-fragment-index="1">
+
 | Prüfung | Frage im Projekt | Nicht geprüft |
 |---|---|---|
 | `tests/unit` (17) | Entscheidet `validation.py` die Grenzen richtig, lehnt es kaputte CSV ab? | Datenbank, Image |
@@ -1637,7 +2475,13 @@ Das Image läuft als Service `app` neben einer frischen Datenbank. Der Test läd
 | `tests/scenarios` (3 gültige + 4 ungültige Dateien) | Verhalten sich die vorbereiteten CSV-Dateien wie erwartet? | API und Datenbank |
 | `tests/smoke` (3) | Arbeitet das gebaute Image mit frischer Datenbank? | Deployment und Last |
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 Zusammen 33 Tests. Die Unit-Tests sind grün, auch wenn im Image die Templates fehlen. Wählen Sie den Test, der genau das prüft, was Sie zusichern.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1647,7 +2491,13 @@ Zusammen 33 Tests. Die Unit-Tests sind grün, auch wenn im Image die Templates f
 
 ## JUnit-Report und Jobstatus
 
+<div class="fragment" data-fragment-index="1">
+
 XML des roten Grenzwerttests, gekürzt:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 ```xml
 <testsuites name="pytest tests">
@@ -1660,9 +2510,19 @@ XML des roten Grenzwerttests, gekürzt:
 </testsuites>
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 pytest schreibt das XML im JUnit-Format mit `--junitxml`. GitLab erkennt einen Test in späteren Pipelines an gleichbleibendem `classname` und `name` wieder. **Rot wird der Job durch den Exit-Code von pytest ungleich 0, nicht durch das XML.**
 
+</div>
+
+<div class="fragment" data-fragment-index="4">
+
 [GitLab: Unit-Test-Reports](https://docs.gitlab.com/ci/testing/unit_test_reports/)
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1672,7 +2532,13 @@ pytest schreibt das XML im JUnit-Format mit `--junitxml`. GitLab erkennt einen T
 
 ## JUnit-Report als Artifact
 
+<div class="fragment" data-fragment-index="1">
+
 Ausschnitt aus `integration_tests`:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 ```yaml
   script:
@@ -1683,9 +2549,19 @@ Ausschnitt aus `integration_tests`:
       junit: report-integration.xml
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Mit `reports:junit` wertet GitLab die Tests aus. `when: always` lädt den Report auch hoch, wenn pytest mit Fehler endet. Wer die Datei selbst herunterladen will, ergänzt `paths:`.
 
+</div>
+
+<div class="fragment" data-fragment-index="4">
+
 Im MR vergleicht GitLab die Testergebnisse mit dem Zielbranch. Dafür braucht es auch von dort einen Report.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1695,7 +2571,13 @@ Im MR vergleicht GitLab die Testergebnisse mit dem Zielbranch. Dafür braucht es
 
 ## JUnit-Report: Test wiedererkennen
 
+<div class="fragment" data-fragment-index="1">
+
 pytest setzt `classname` aus dem Modulpfad (`tests.unit.test_validation`) und `name` aus der Testfunktion. In `tests/scenarios` steht der Szenarioname in der ID, z. B. `test_scenario[valid-temperature]`.
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 | Bestandteil | Zweck |
 |---|---|
@@ -1704,7 +2586,13 @@ pytest setzt `classname` aus dem Modulpfad (`tests.unit.test_validation`) und `n
 | `failure` / `error` | Zeigen, was schiefging |
 | Szenario im Testnamen | Varianten unterscheiden |
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Dass Sie das XML herunterladen können, heißt nicht, dass GitLab es richtig eingelesen hat. Das zeigt der Tab **Tests** der Pipeline.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1714,15 +2602,35 @@ Dass Sie das XML herunterladen können, heißt nicht, dass GitLab es richtig ein
 
 ## Coverage: Formel und Nenner
 
+<div class="fragment" data-fragment-index="1">
+
 Bei Coverage nach Zeilen gilt:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 **Coverage = erfasste ausgeführte Zeilen / erfasste ausführbare Zeilen × 100 %**
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Beispiel: `6 / 8 × 100 % = 75 %`. Der Nenner sind die acht ausführbaren Zeilen. Kommentare und andere Textzeilen zählen nicht.
+
+</div>
+
+<div class="fragment" data-fragment-index="4">
 
 pytest-cov misst im Projekt mit `branch = true`: Dann zählen auch die Zweige von Bedingungen in Zähler und Nenner. Die 75 % oben sind ein Rechenbeispiel. Im Projekt messen nur die Unit-Tests: 67 % gesamt, `validation.py` 100 %. `app.py` und `db.py` laufen nur zum Teil, weil die Unit-Tests keine Datenbank haben.
 
+</div>
+
+<div class="fragment" data-fragment-index="5">
+
 [coverage.py: Branch-Coverage](https://coverage.readthedocs.io/en/latest/branch.html)
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1732,19 +2640,39 @@ pytest-cov misst im Projekt mit `branch = true`: Dann zählen auch die Zweige vo
 
 ## Coverage-Wert aus dem Job-Log
 
+<div class="fragment" data-fragment-index="1">
+
 Ausschnitt aus `unit_tests`:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 ```yaml
   coverage: '/^TOTAL.*\s(\d+(?:\.\d+)?)%$/'
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Letzte Zeile der Tabelle im Log, Spalten gekürzt:
+
+</div>
+
+<div class="fragment" data-fragment-index="4">
 
 ```text
 TOTAL   …   67%
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="5">
+
 `--cov-report=term` schreibt die Tabelle von pytest-cov ins Log. `coverage:` holt die Zahl nur aus dem Log. GitLab misst selbst nichts.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1754,6 +2682,8 @@ TOTAL   …   67%
 
 ## Coverage-Annotation im MR-Diff
 
+<div class="fragment" data-fragment-index="1">
+
 ```yaml
   artifacts:
     reports:
@@ -1762,11 +2692,25 @@ TOTAL   …   67%
         path: coverage.xml
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 `--cov-report=xml:coverage.xml` schreibt die Datei. Die Markierung im Diff funktioniert unabhängig vom Regex im Log. Die Pfade im XML müssen zum Repository passen. Markierungen erscheinen nur bei **geänderten Dateien im MR-Diff**.
+
+</div>
+
+<div class="fragment" data-fragment-index="3">
 
 Fehlt eine Markierung, kann das am Pfad oder an der Verarbeitung liegen. Die Coverage ist deshalb nicht null.
 
+</div>
+
+<div class="fragment" data-fragment-index="4">
+
 [GitLab: Coverage-Auswertung und Visualisierung](https://docs.gitlab.com/ci/testing/code_coverage/)
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1776,15 +2720,35 @@ Fehlt eine Markierung, kann das am Pfad oder an der Verarbeitung liegen. Die Cov
 
 ## Coverage und Assertion
 
+<div class="fragment" data-fragment-index="1">
+
 Ein Test ruft `is_within_limits(19, 19, 21)` auf (Wert 19, Grenzen 19 und 21) und prüft nur, dass ein Wahrheitswert zurückkommt.
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 Die Zeile zählt dann als ausgeführt, auch mit dem Fehler am Grenzwert `lower < value`. `validation.py` bleibt so bei 100 %.
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Erst `assert is_within_limits(19, 19, 21)` verlangt das **richtige Ergebnis am Grenzwert**. Coverage zeigt, was lief. Die Assertion prüft, ob es stimmt.
+
+</div>
+
+<div class="fragment" data-fragment-index="4">
 
 Ein Pflicht-Approval bei zu wenig Coverage gibt es nur in **Premium/Ultimate**. Free hat das nicht.
 
+</div>
+
+<div class="fragment" data-fragment-index="5">
+
 [GitLab: Coverage-Check](https://docs.gitlab.com/ci/testing/code_coverage/coverage_reporting/)
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1794,7 +2758,13 @@ Ein Pflicht-Approval bei zu wenig Coverage gibt es nur in **Premium/Ultimate**. 
 
 ## Testmatrix mit `SCENARIO`
 
+<div class="fragment" data-fragment-index="1">
+
 Der Job `scenarios` läuft als Matrix, einmal je Wert von `SCENARIO`:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 ```yaml
 scenarios:
@@ -1805,9 +2775,19 @@ scenarios:
     - pytest tests/scenarios --junitxml=report-$SCENARIO.xml
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Der Test liest die Dateien aus `testdata/$SCENARIO`: `valid` hat drei CSV-Dateien, `invalid` vier. Bei `invalid` ist der Test grün, wenn die Anwendung die Datei ablehnt.
 
+</div>
+
+<div class="fragment" data-fragment-index="4">
+
 Die Szenarien **testen unterschiedlich viel**. Die Matrix teilt keine Arbeit in gleich große Stücke auf.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1817,14 +2797,26 @@ Die Szenarien **testen unterschiedlich viel**. Die Matrix teilt keine Arbeit in 
 
 ## `parallel: 2` und `parallel:matrix` im Vergleich
 
+<div class="fragment" data-fragment-index="1">
+
 | Konfiguration | Was entsteht? | Was Sie selbst tun müssen |
 |---|---|---|
 | `parallel: 2` | Zwei Instanzen desselben Jobs | Tests selbst aufteilen, mit `CI_NODE_INDEX` und `CI_NODE_TOTAL` |
 | `parallel:matrix` | Ein Job je Variablenkombination | Varianten und erwartete Testzahl festlegen |
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 Im Projekt laufen zwei Szenarien, jedes schreibt seinen eigenen Report `report-$SCENARIO.xml`. Lädt ein späterer Job die Artifacts mehrerer Matrix-Jobs, dürfen sich gleiche Pfade nicht still überschreiben.
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Der Job `build_wheel` wartet nur auf `lint` und `unit_tests`, nicht auf die Szenarien.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1834,10 +2826,14 @@ Der Job `build_wheel` wartet nur auf `lint` und `unit_tests`, nicht auf die Szen
 
 ## Kette: Testlauf, Report, Upload, MR-Anzeige
 
-<img src="figs/test-nachweise.png" alt="Testausführung, Report, Upload und MR-Anzeige sind getrennte Nachweisschritte." style="object-fit: scale-down">
+<img src="figs/test-nachweise.png" alt="Testausführung, Report, Upload und MR-Anzeige sind getrennte Nachweisschritte." style="object-fit: scale-down" class="fragment" data-fragment-index="1">
 
+
+<div class="fragment" data-fragment-index="2">
 
 Test gelaufen, Report geschrieben, hochgeladen und **im MR richtig angezeigt**: vier getrennte Schritte. Ob die Anzeige klappt, sehen Sie nur in einem MR auf Ihrer Instanz.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1847,6 +2843,8 @@ Test gelaufen, Report geschrieben, hochgeladen und **im MR richtig angezeigt**: 
 
 ## Diagnose: Tests und Reports
 
+<div class="fragment" data-fragment-index="1">
+
 | Symptom | Prüfen Sie |
 |---|---|
 | Test schlägt fehl, Job grün | Exit-Code des Testbefehls und `allow_failure` |
@@ -1855,7 +2853,13 @@ Test gelaufen, Report geschrieben, hochgeladen und **im MR richtig angezeigt**: 
 | Coverage-Zahl da, Diff ohne Markierung | `coverage_report` und XML-Pfade |
 | `build_image` grün, Smoke-Test rot | `CMD`, Rechte, Port und Paketinhalt |
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 Jedes Fehlerbild zeigt auf einen anderen Schritt.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1865,6 +2869,8 @@ Jedes Fehlerbild zeigt auf einen anderen Schritt.
 
 ## Diagnose: vier Fehlerorte
 
+<div class="fragment" data-fragment-index="1">
+
 | Fehlerort | Änderung | Was Sie sehen |
 |---|---|---|
 | Fachlogik | `lower < value` statt `lower <= value` | `unit_tests` rot: `1 failed, 16 passed` |
@@ -1872,7 +2878,13 @@ Jedes Fehlerbild zeigt auf einen anderen Schritt.
 | Service | Host `datenbank` statt `db` | `failed to resolve host 'datenbank'`, `6 errors` |
 | Paketierung | `package-data` fehlt in `pyproject.toml` | Nur `container_smoke` rot: `assert 500 == 200` |
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 Nur die erste Zeile ist ein Fehler im Programm. Den Paketierungsfehler sehen die Unit-Tests nicht: Im Checkout liegen die Templates, im Wheel fehlen sie.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1882,11 +2894,23 @@ Nur die erste Zeile ist ein Fehler im Programm. Den Paketierungsfehler sehen die
 
 ## Rückblick Teil VII
 
+<div class="fragment" data-fragment-index="1">
+
 Runner-Rechte und Jobcode bestimmen, **worauf ein Job zugreifen kann**. Die vier Containerrollen trennen Werkzeug (Jobimage, Builder), Hilfsdienst (Service) und Produkt.
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 Exit-Code, Testreport, Coverage und Image-Digest prüfen Sie jeweils einzeln. Der Smoke-Test gegen das Image ergänzt den Grenzwerttest, ersetzt ihn aber nicht.
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Im nächsten Teil prüfen wir, ob Auto DevOps, eine fertige Pipeline von GitLab, zum Projekt passt.
+
+</div>
 </div></script></section></section><section ><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1904,13 +2928,17 @@ Im nächsten Teil prüfen wir, ob Auto DevOps, eine fertige Pipeline von GitLab,
 
 ## Lernziele Teil VIII
 
+<div class="fragment" data-fragment-index="1">
+
 Sie können:
 
-- &shy;<!-- .element: class="fragment" data-fragment-index="1" -->erklären, was Auto DevOps anders macht als Ihre Pipeline, 
-- &shy;<!-- .element: class="fragment" data-fragment-index="2" -->für Build, Test und Deployment einzeln prüfen, ob die Vorgaben zum Projekt passen, 
-- &shy;<!-- .element: class="fragment" data-fragment-index="3" -->einen kleinen nächsten Schritt planen und sagen, wie Sie ihn testen. 
+</div>
 
-<div class="fragment" data-fragment-index="4">
+- &shy;<!-- .element: class="fragment" data-fragment-index="2" -->erklären, was Auto DevOps anders macht als Ihre Pipeline, 
+- &shy;<!-- .element: class="fragment" data-fragment-index="3" -->für Build, Test und Deployment einzeln prüfen, ob die Vorgaben zum Projekt passen, 
+- &shy;<!-- .element: class="fragment" data-fragment-index="4" -->einen kleinen nächsten Schritt planen und sagen, wie Sie ihn testen. 
+
+<div class="fragment" data-fragment-index="5">
 
 **Was erkennt Auto DevOps an einem Projekt von selbst, was müssen Sie konfigurieren?**
 
@@ -1924,16 +2952,32 @@ Sie können:
 
 ## Auto DevOps: vorkonfigurierter Ablauf
 
+<div class="fragment" data-fragment-index="1">
+
 Auto DevOps ist eine fertige Pipeline von GitLab: Sie erkennt, wie das Projekt gebaut wird, baut und testet es und ergänzt Schritte je nach Projekt und Infrastruktur.
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 | Bisher | Auto DevOps |
 |---|---|
 | Jobs und Regeln selbst schreiben | Vorgaben von GitLab nutzen und prüfen |
 | Werkzeuge und Eingaben selbst festlegen | Prüfen, ob Erkennung und Standardpfade passen |
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Gibt es eine `.gitlab-ci.yml`, nutzt GitLab diese und nicht die Auto-DevOps-Pipeline.
 
+</div>
+
+<div class="fragment" data-fragment-index="4">
+
 [GitLab: Auto DevOps](https://docs.gitlab.com/topics/autodevops/)
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1943,6 +2987,8 @@ Gibt es eine `.gitlab-ci.yml`, nutzt GitLab diese und nicht die Auto-DevOps-Pipe
 
 ## Auto DevOps an der Messwertprüfung
 
+<div class="fragment" data-fragment-index="1">
+
 | Ohne `.gitlab-ci.yml`: Was Auto DevOps vorfindet | Was folgt daraus? |
 |---|---|
 | Dockerfile vorhanden | Auto Build baut mit `docker build` |
@@ -1951,7 +2997,13 @@ Gibt es eine `.gitlab-ci.yml`, nutzt GitLab diese und nicht die Auto-DevOps-Pipe
 | Dienst `/health` vorhanden | Noch kein Deploymentziel |
 | Eigenes YAML vorhanden | Es gilt. Auto DevOps liefe erst ohne `.gitlab-ci.yml` |
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 Auto Build braucht ein passendes Buildpack oder Dockerfile. **Ein gebautes Image heißt nicht, dass der Grenzwerttest gelaufen ist.**
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1961,7 +3013,13 @@ Auto Build braucht ein passendes Buildpack oder Dockerfile. **Ein gebautes Image
 
 ## Auto Test: Taugt die Vorlage?
 
+<div class="fragment" data-fragment-index="1">
+
 Eine fertige Pipeline wie Auto Test taugt erst, wenn diese fünf Fälle stimmen:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 | Fall | Erwartung |
 |---|---|
@@ -1971,7 +3029,13 @@ Eine fertige Pipeline wie Auto Test taugt erst, wenn diese fünf Fälle stimmen:
 | Installation aus `requirements*.txt` | Dieselben festen Versionen wie bisher |
 | Integrationstests mit PostgreSQL | `6 passed` gegen eine echte Datenbank |
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Diese fünf Punkte verlangen wir auch von der eigenen Pipeline. Auto Test stellt laut Doku eine temporäre PostgreSQL bereit, ein bloßes `pytest` führt im Projekt aber nur `tests/unit` aus. Ein erkanntes Projekt oder ein grüner Build sagt dazu nichts.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1981,13 +3045,17 @@ Diese fünf Punkte verlangen wir auch von der eigenen Pipeline. Auto Test stellt
 
 ## Auto Deploy: Voraussetzungen für Kubernetes
 
+<div class="fragment" data-fragment-index="1">
+
 Für ein **Deployment nach Kubernetes** brauchen Sie:
 
-- &shy;<!-- .element: class="fragment" data-fragment-index="1" -->Zugang zum Cluster und eine abgesprochene Deploymentstrategie, 
-- &shy;<!-- .element: class="fragment" data-fragment-index="2" -->Ingress und Base-Domain mit passendem Wildcard-DNS, 
-- &shy;<!-- .element: class="fragment" data-fragment-index="3" -->einen passenden Runner und klar begrenzte Rechte. 
+</div>
 
-<div class="fragment" data-fragment-index="4">
+- &shy;<!-- .element: class="fragment" data-fragment-index="2" -->Zugang zum Cluster und eine abgesprochene Deploymentstrategie, 
+- &shy;<!-- .element: class="fragment" data-fragment-index="3" -->Ingress und Base-Domain mit passendem Wildcard-DNS, 
+- &shy;<!-- .element: class="fragment" data-fragment-index="4" -->einen passenden Runner und klar begrenzte Rechte. 
+
+<div class="fragment" data-fragment-index="5">
 
 Auto DevOps geht auch ohne Kubernetes: Build und Test helfen schon vorher. Für andere Ziele lesen Sie deren eigene Doku.
 
@@ -2003,6 +3071,8 @@ Auto DevOps geht auch ohne Kubernetes: Build und Test helfen schon vorher. Für 
 
 ## Auto DevOps: vom grünen Build zum Rollout
 
+<div class="fragment" data-fragment-index="1">
+
 | Gezeigt | Noch offen |
 |---|---|
 | Image erfolgreich gebaut | Holt das Ziel es aus der Registry? |
@@ -2010,7 +3080,13 @@ Auto DevOps geht auch ohne Kubernetes: Build und Test helfen schon vorher. Für 
 | `/health` des Images grün | Prüft das Produkt die Grenzen richtig? |
 | Pipeline grün, Deploy-Job übersprungen | Ist es ausgeliefert? |
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 Für die Produktion braucht es Monitoring, einen Rückfallplan und jemanden, der freigibt. Einen Kubernetes-Rollout machen wir im Seminar nicht.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -2020,7 +3096,13 @@ Für die Produktion braucht es Monitoring, einen Rückfallplan und jemanden, der
 
 ## Auto DevOps: Verfügbarkeit nach Tier
 
+<div class="fragment" data-fragment-index="1">
+
 Auto DevOps selbst ist in **Free, Premium und Ultimate** verfügbar.
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 | Teilfunktion | Tier laut Doku |
 |---|---|
@@ -2028,9 +3110,19 @@ Auto DevOps selbst ist in **Free, Premium und Ultimate** verfügbar.
 | Auto DAST (Test der laufenden Anwendung) | Ultimate |
 | Auto Browser-/Load-Performance | Premium, Ultimate |
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 **Prüfen Sie für jede Teilfunktion einzeln, ob Ihr Tier sie enthält und ob sie bei Ihnen läuft.**
 
+</div>
+
+<div class="fragment" data-fragment-index="4">
+
 [GitLab: Auto DevOps und zugehörige Stages](https://docs.gitlab.com/topics/autodevops/stages/)
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -2040,6 +3132,8 @@ Auto DevOps selbst ist in **Free, Premium und Ultimate** verfügbar.
 
 ## Auto DevOps oder eigene Pipeline?
 
+<div class="fragment" data-fragment-index="1">
+
 | Frage | Dann |
 |---|---|
 | Passen Build und Test zu den Vorgaben? | Vorlage in einem kleinen Piloten testen |
@@ -2047,7 +3141,13 @@ Auto DevOps selbst ist in **Free, Premium und Ultimate** verfügbar.
 | Sehr eigene Anforderungen an PostgreSQL-Tests, Image-Prüfung und Gates? | Eigene Pipeline behalten oder kombinieren |
 | Viele Overrides, keiner versteht das Ganze? | Aufwand mit eigenem YAML vergleichen |
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 Bei der Messwertprüfung bleibt es bei der eigenen Pipeline, weil man sie nachvollziehen kann. Das gilt für dieses Projekt, nicht für Auto DevOps allgemein.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -2057,7 +3157,13 @@ Bei der Messwertprüfung bleibt es bei der eigenen Pipeline, weil man sie nachvo
 
 ## Nächste Schritte und ihre Prüfung
 
+<div class="fragment" data-fragment-index="1">
+
 Für Ihr eigenes Projekt: Legen Sie für jeden Schritt fest, woran Sie Erfolg und Fehler erkennen. „Grün“ allein sagt zu wenig.
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 | Nächster Schritt | Bei Erfolg | Bei Fehler |
 |---|---|---|
@@ -2065,7 +3171,13 @@ Für Ihr eigenes Projekt: Legen Sie für jeden Schritt fest, woran Sie Erfolg un
 | Job ergänzen, der das gebaute Paket installiert | Genau das gebaute Paket wird installiert | Job wird rot, wenn das Wheel fehlt |
 | `workflow:rules` schärfen | Richtige Pipeline startet | Doppelte oder fehlende Pipeline fällt auf |
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Jeder Schritt braucht ein klares Ziel, geklärte Rechte und einen sichtbaren Erfolg oder Fehler.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -2075,11 +3187,23 @@ Jeder Schritt braucht ein klares Ziel, geklärte Rechte und einen sichtbaren Erf
 
 ## Rückblick Teil V bis VIII
 
+<div class="fragment" data-fragment-index="1">
+
 Die Korrektur der Grenzwertprüfung in `validation.py` hat einen Grund, einen Commit, ein Review und passende automatische Tests.
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 Die Pipeline legt fest, wann welche Jobs laufen und was sie brauchen. Sie wissen, welche Variablen ein Job bekommt, welche Dateien er weitergibt und was Runner und Container dürfen.
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 **Sie geben ein Ergebnis weiter und können sagen, was geprüft ist und was nicht.**
+
+</div>
 </div></script></section></section><section ><section data-separator="?
 ---?
 " data-separator-vertical="?

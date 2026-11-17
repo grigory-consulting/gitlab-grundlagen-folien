@@ -164,10 +164,14 @@ Zuerst klären wir, was das Skript künftig tun soll. Danach sehen wir, welche W
 
 ## Beispielanforderung: sortierte Dateiliste
 
+<div class="fragment" data-fragment-index="1">
+
 Unser Kursprojekt heißt **Banana Project**. Sein Skript `ListFiles.ps1` gibt alle Dateien eines Verzeichnisses mit ihrer Größe aus.
 
+</div>
+
 <div class="ist-soll">
-<div>
+<div class="fragment" data-fragment-index="2">
 
 **Heute:** Reihenfolge, wie das Dateisystem sie liefert
 
@@ -177,7 +181,7 @@ alpha.txt - 1 Bytes
 ```
 
 </div>
-<div>
+<div class="fragment" data-fragment-index="3">
 
 **Gewünscht:** aufsteigend nach Dateinamen, Format unverändert
 
@@ -189,15 +193,15 @@ beta.txt - 2 Bytes
 </div>
 </div>
 
-<div class="fragment" data-fragment-index="1">
+<div class="fragment" data-fragment-index="4">
 
 **Aufgabe des Teams:**
 
 </div>
 
-1. Skript ändern, sodass es nach Namen sortiert. <!-- .element: class="fragment" data-fragment-index="2" -->
-2. Test ergänzen, der die Reihenfolge prüft. <!-- .element: class="fragment" data-fragment-index="3" -->
-3. Geprüften Stand als Artifact übergeben. <!-- .element: class="fragment" data-fragment-index="4" -->
+1. Skript ändern, sodass es nach Namen sortiert. <!-- .element: class="fragment" data-fragment-index="5" -->
+2. Test ergänzen, der die Reihenfolge prüft. <!-- .element: class="fragment" data-fragment-index="6" -->
+3. Geprüften Stand als Artifact übergeben. <!-- .element: class="fragment" data-fragment-index="7" -->
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -207,13 +211,21 @@ beta.txt - 2 Bytes
 
 ## Git und GitLab: Aufgabenteilung
 
+<div class="fragment" data-fragment-index="1">
+
 | Git | GitLab |
 |---|---|
 | Speichert Dateistände und ihre Historie. | Stellt das Repository dem Team bereit. |
 | Läuft lokal, auch ohne Server. | Ergänzt Issues, Merge Requests und Pipelines. |
 | Verwaltet Commits, Branches und Remotes. | Regelt Zugriffsrechte, Reviews und automatische Jobs. |
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 Einen Commit können Sie lokal ohne GitLab anlegen. Issues und Review-Kommentare liegen dagegen nur in GitLab: `git clone` lädt sie nicht mit herunter.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -240,6 +252,8 @@ Jeder Schritt klärt eine Frage: **Brauchen wir das? Ist es verständlich? Sind 
 
 ## Bausteine eines GitLab-Projekts
 
+<div class="fragment" data-fragment-index="1">
+
 | Baustein | Beispiel im Banana Project |
 |---|---|
 | **Issue** | „Dateiliste nach Namen sortieren“ |
@@ -248,7 +262,13 @@ Jeder Schritt klärt eine Frage: **Brauchen wir das? Ist es verständlich? Sind 
 | **Pipeline** | Ergebnisse von Lint, Test und ZIP-Erzeugung |
 | **Artifact** | Das ZIP, das ein Job erzeugt hat |
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 Das Repository speichert den Quellcode mit seiner Historie. Das Artifact ist **nur eine Datei, die ein Job daraus erzeugt hat**.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -258,9 +278,17 @@ Das Repository speichert den Quellcode mit seiner Historie. Das Artifact ist **n
 
 ## Continuous Integration
 
+<div class="fragment" data-fragment-index="1">
+
 **Definition:** Das Team führt seine Änderungen oft, meist mehrmals täglich, im gemeinsamen Branch zusammen. Build und Tests laufen dabei automatisch und melden, ob noch alles funktioniert.
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 **Kein CI:** Ein Branch bleibt wochenlang getrennt und wird jeden Tag gebaut. Mit der Arbeit der anderen wird er aber erst spät zusammengeführt.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -270,13 +298,21 @@ Das Repository speichert den Quellcode mit seiner Historie. Das Artifact ist **n
 
 ## Lint, Test und Package
 
+<div class="fragment" data-fragment-index="1">
+
 | Prüfung | Was sie im Beispiel prüft | Was sie nicht prüft |
 |---|---|---|
 | **Lint** | Hält der PowerShell-Code die eingestellten Regeln ein? | Ist die Ausgabe richtig sortiert? |
 | **Test** | Die Fälle, die im Test stehen | Fälle, die niemand geschrieben hat |
 | **Package** | Liegen die vorgesehenen Dateien im ZIP? | Arbeitet das Skript fachlich richtig? |
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 Ein grüner Haken sagt nur, dass diese eine Prüfung bestanden ist. **Was geprüft wurde, steht im Job**, nicht in seinem Namen.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -286,11 +322,23 @@ Ein grüner Haken sagt nur, dass diese eine Prüfung bestanden ist. **Was geprü
 
 ## Continuous Delivery
 
+<div class="fragment" data-fragment-index="1">
+
 **Definition:** Build, Tests und ZIP-Erzeugung laufen automatisch. Am Ende liegt ein Stand bereit, der jederzeit ausgeliefert werden kann. Ob er in Produktion geht, **entscheidet ein Mensch**.
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 **Im Beispiel:** Das Artifact ist gebaut und getestet. Erst wenn eine berechtigte Person es freigibt, wird es in die Zielumgebung ausgeliefert.
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 **Noch kein Deployment:** Das ZIP liegt nur in GitLab. Auf dem Zielsystem hat sich nichts geändert.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -300,11 +348,23 @@ Ein grüner Haken sagt nur, dass diese eine Prüfung bestanden ist. **Was geprü
 
 ## Continuous Deployment
 
+<div class="fragment" data-fragment-index="1">
+
 **Definition:** Jede Änderung, die alle Prüfungen besteht, geht automatisch in Produktion. Niemand gibt sie vorher noch einmal frei.
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 Der Unterschied zu Delivery: **Gibt vor der Produktion noch ein Mensch frei?** Ob ein Job `deploy` heißt, spielt dafür keine Rolle.
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 **Im Beispiel:** Fehlt der Test für die Sortierung, geht eine falsch sortierte Liste direkt in Produktion. Bei automatischer Auslieferung müssen die Tests deshalb alles prüfen, was sonst ein Mensch vor der Freigabe prüfen würde.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -314,11 +374,15 @@ Der Unterschied zu Delivery: **Gibt vor der Produktion noch ein Mensch frei?** O
 
 ## Delivery und Deployment im Vergleich
 
+<div class="fragment" data-fragment-index="1">
+
 | | Continuous Delivery | Continuous Deployment |
 |---|---|---|
 | Build und Tests laufen automatisch | Ja | Ja |
 | Wer entscheidet über die Auslieferung? | Ein Mensch | Die Pipeline |
 | Ergebnis am Ende | Artifact wartet auf Freigabe | Artifact läuft in Produktion |
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -328,15 +392,31 @@ Der Unterschied zu Delivery: **Gibt vor der Produktion noch ein Mensch frei?** O
 
 ## Aussagekraft eines grünen Tests
 
+<div class="fragment" data-fragment-index="1">
+
 Angenommen, der Test legt nur eine Datei an und erwartet diese Ausgabe:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 ```text
 banana.txt - 6 Bytes
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Der Test prüft Namen und Größe, aber **nicht die Reihenfolge**. Er bliebe auch grün, wenn das Skript absteigend sortiert.
 
+</div>
+
+<div class="fragment" data-fragment-index="4">
+
 Erst ein Test mit zwei Dateien erkennt eine falsche Reihenfolge. „Alle Tests erfolgreich“ heißt nur: Die Fälle, die jemand geschrieben hat, sind bestanden.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -346,6 +426,8 @@ Erst ein Test mit zwei Dateien erkennt eine falsche Reihenfolge. „Alle Tests e
 
 ## Entscheidungen und Verantwortliche
 
+<div class="fragment" data-fragment-index="1">
+
 | Frage | Wer entscheidet |
 |---|---|
 | Was soll sich ändern? | Auftraggeber bzw. Product Owner, zusammen mit dem Team |
@@ -353,7 +435,13 @@ Erst ein Test mit zwei Dateien erkennt eine falsche Reihenfolge. „Alle Tests e
 | Welche Prüfungen müssen laufen? | Das Team; ein Maintainer baut sie in die Pipeline ein |
 | Darf ausgeliefert werden? | Eine benannte Person, z. B. Product Owner oder Betrieb |
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 GitLab legt diese Zuständigkeiten nicht fest, das **vereinbart das Team**. Eine Person kann mehrere davon übernehmen.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -363,11 +451,23 @@ GitLab legt diese Zuständigkeiten nicht fest, das **vereinbart das Team**. Eine
 
 ## Rückblick Teil I
 
+<div class="fragment" data-fragment-index="1">
+
 **Issue → Änderung → Review → Test → Freigabe:** An jedem Schritt prüft jemand etwas anderes.
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 Bei CI führt das Team oft zusammen und testet automatisch. Delivery und Deployment unterscheiden sich darin, ob vor der Produktion ein Mensch freigibt.
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Im nächsten Teil geht es darum, **welche lokalen Dateien Git speichert und zu GitLab überträgt**.
+
+</div>
 </div></script></section></section><section ><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -404,13 +504,21 @@ Beispiel bleibt die Sortierung in `ListFiles.ps1`. Git speichert, was sich an de
 
 ## Gruppe, Projekt, Repository
 
+<div class="fragment" data-fragment-index="1">
+
 | Ebene | Enthält | Beispiel |
 |---|---|---|
 | **Gruppe** | Mitglieder, Untergruppen, Projekte | `team` |
 | **Projekt** | Repository, Issues, MRs, Pipelines | `team/banana` |
 | **Repository** | Dateien und ihre Historie | `ListFiles.ps1`, Tests, README |
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 Ein Projekt umfasst mehr als das Repository. Ihr lokaler Ordner darf anders heißen als der Pfad in GitLab.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -420,14 +528,26 @@ Ein Projekt umfasst mehr als das Repository. Ihr lokaler Ordner darf anders hei�
 
 ## Geerbte Mitgliedschaft
 
+<div class="fragment" data-fragment-index="1">
+
 **Beispiel:** Jemand ist Developer in der Gruppe `team`. Das Projekt `banana` liegt in dieser Gruppe.
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 | Was Sie ändern | Was passiert |
 |---|---|
 | Person direkt aus dem Projekt nehmen | Zugriff über die Gruppe bleibt |
 | Mitgliedschaft in der Gruppe `team` ändern | Ändert den Zugriff über die Gruppe |
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Bei unerwarteten Rechten reicht der Blick ins Projekt nicht. Prüfen Sie **direkte, geerbte und geteilte Mitgliedschaften** einzeln.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -437,13 +557,21 @@ Bei unerwarteten Rechten reicht der Blick ins Projekt nicht. Prüfen Sie **direk
 
 ## Sichtbarkeit, Rolle und Branch-Regel
 
+<div class="fragment" data-fragment-index="1">
+
 | Frage | Regelt |
 |---|---|
 | Wer kann das Projekt sehen? | Sichtbarkeit und Mitgliedschaft |
 | Was darf die Person tun? | Ihre Rolle in Gruppe oder Projekt |
 | Darf sie direkt auf `main` pushen? | Schutzregeln für den Branch |
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 **Privat** hält nur Außenstehende fern. Wer im Team was darf und wie Code nach `main` kommt, regeln Sie extra.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -453,6 +581,8 @@ Bei unerwarteten Rechten reicht der Blick ins Projekt nicht. Prüfen Sie **direk
 
 ## Rollen von Guest bis Owner
 
+<div class="fragment" data-fragment-index="1">
+
 | Rolle | Darf typischerweise |
 |---|---|
 | **Guest** | Mitdiskutieren; in privaten Repositories standardmäßig keinen Code sehen |
@@ -461,9 +591,19 @@ Bei unerwarteten Rechten reicht der Blick ins Projekt nicht. Prüfen Sie **direk
 | **Maintainer** | Projekt einstellen, Branches schützen |
 | **Owner** | Volle Kontrolle über Gruppe oder Projekt |
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 Es gibt weitere Rollen und Sonderrechte. Ob eine Aktion erlaubt ist, regeln **Rechtetabelle, Ebene und Projektregeln**.
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 [GitLab: Roles and permissions](https://docs.gitlab.com/user/permissions/)
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -599,7 +739,13 @@ Jede Änderung geht diesen Weg. Die folgenden Folien zeigen die Befehle dazu ein
 
 ## Diff der Sortieränderung
 
+<div class="fragment" data-fragment-index="1">
+
 Die entscheidende Stelle in `ListFiles.ps1`:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 ```diff
  Get-ChildItem -LiteralPath $Path -File -ErrorAction Stop |
@@ -607,9 +753,19 @@ Die entscheidende Stelle in `ListFiles.ps1`:
      ForEach-Object { '{0} - {1} Bytes' -f $_.Name, $_.Length }
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Welche Dateien und in welchem Format: bleibt gleich. Neu ist nur: **Das Skript sortiert nach Namen**.
 
+</div>
+
+<div class="fragment" data-fragment-index="4">
+
 Der Diff zeigt, was sich geändert hat. Ob die Ausgabe wirklich sortiert ist, muss ein Test zeigen.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -619,7 +775,13 @@ Der Diff zeigt, was sich geändert hat. Ob die Ausgabe wirklich sortiert ist, mu
 
 ## `git status --short`: die zwei Spalten
 
+<div class="fragment" data-fragment-index="1">
+
 Beispielausgabe (ohne Merge-Konflikt):
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 ```text
  M ListFiles.ps1
@@ -627,13 +789,27 @@ M  README.md
 ?? notes.txt
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 **Spalte 1:** Index vs. letzter Commit. **Spalte 2:** Working Tree vs. Index.
 
+</div>
+
+<div class="fragment" data-fragment-index="4">
+
 Die Änderung am Skript liegt noch nicht im Index, die am README schon. `notes.txt` kennt Git noch gar nicht.
+
+</div>
+
+<div class="fragment" data-fragment-index="5">
 
 ```bash
 git status --short
 ```
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -643,17 +819,29 @@ git status --short
 
 ## `git diff` und `git diff --staged`
 
+<div class="fragment" data-fragment-index="1">
+
 ```bash
 git diff -- ListFiles.ps1
 git diff --staged -- ListFiles.ps1
 ```
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 | Befehl | Vergleich | Frage |
 |---|---|---|
 | `git diff` | Working Tree mit Index | Was fehlt noch im Index? |
 | `git diff --staged` | Index mit letztem Commit | Was kommt in den nächsten Commit? |
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Nach `add` kann `git diff` leer sein, obwohl die Änderung **noch nicht committed** ist.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -663,18 +851,30 @@ Nach `add` kann `git diff` leer sein, obwohl die Änderung **noch nicht committe
 
 ## `git add`
 
+<div class="fragment" data-fragment-index="1">
+
 ```bash
 git add ListFiles.ps1
 git diff --staged -- ListFiles.ps1
 git status --short
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 | `ListFiles.ps1` | Vor `add` | Nach `add` |
 |---|---|---|
 | Kurzstatus | ` M` | `M ` |
 | Sortierzeile liegt im Index | Nein | Ja |
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Einzeln hinzufügen hält Fremdes aus dem Commit. `add` legt die Datei **so, wie sie jetzt ist**, in den Index. Ändern Sie danach weiter, ist ein neues `add` nötig.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -684,7 +884,13 @@ Einzeln hinzufügen hält Fremdes aus dem Commit. `add` legt die Datei **so, wie
 
 ## Index und Working Tree derselben Datei
 
+<div class="fragment" data-fragment-index="1">
+
 Angenommen, Sie ändern die Sortierzeile nach `add` noch einmal:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 | Bereich | Sortierzeile |
 |---|---|
@@ -692,11 +898,21 @@ Angenommen, Sie ändern die Sortierzeile nach `add` noch einmal:
 | Index | `Sort-Object -Property Name` |
 | Working Tree | `Sort-Object -Property Name -Descending` |
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 ```text
 MM ListFiles.ps1
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="4">
+
 Ohne neues `add` speichert der Commit die **aufsteigende** Fassung. `-Descending` bleibt nur im Working Tree. Prüfen Sie deshalb vor dem Commit beide Diffs.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -706,14 +922,26 @@ Ohne neues `add` speichert der Commit die **aufsteigende** Fassung. `-Descending
 
 ## `git commit`
 
+<div class="fragment" data-fragment-index="1">
+
 ```bash
 git commit -m "feat: sortiere Dateiliste nach Namen"
 git log -1 --oneline
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 Der Commit speichert den Inhalt des Index, dazu Vorgänger, Autor und Zeit. Er liegt **nur lokal** und ist noch nicht bei GitLab.
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Der Betreff sagt, was sich ändert, die Beschreibung bei Bedarf, warum. `feat:` ist eine Absprache im Team, Git verlangt das nicht.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -723,17 +951,21 @@ Der Betreff sagt, was sich ändert, die Beschreibung bei Bedarf, warum. `feat:` 
 
 ## Historie lesen: `log`, `show`, `diff`
 
+<div class="fragment" data-fragment-index="1">
+
 ```bash
 git log --oneline -5
 git show HEAD -- ListFiles.ps1
 git diff HEAD~1 HEAD -- ListFiles.ps1
 ```
 
-- &shy;<!-- .element: class="fragment" data-fragment-index="1" -->`log` listet die Commits auf. 
-- &shy;<!-- .element: class="fragment" data-fragment-index="2" -->`show` zeigt einen Commit samt Änderungen. 
-- &shy;<!-- .element: class="fragment" data-fragment-index="3" -->`diff` vergleicht zwei Commits. 
+</div>
 
-<div class="fragment" data-fragment-index="4">
+- &shy;<!-- .element: class="fragment" data-fragment-index="2" -->`log` listet die Commits auf. 
+- &shy;<!-- .element: class="fragment" data-fragment-index="3" -->`show` zeigt einen Commit samt Änderungen. 
+- &shy;<!-- .element: class="fragment" data-fragment-index="4" -->`diff` vergleicht zwei Commits. 
+
+<div class="fragment" data-fragment-index="5">
 
 `HEAD` ist der Commit, auf dem Sie gerade stehen, `HEAD~1` sein Vorgänger. Fehlt der, etwa in einem neuen Repository, scheitert der Vergleich.
 
@@ -747,7 +979,13 @@ git diff HEAD~1 HEAD -- ListFiles.ps1
 
 ## `.gitignore`
 
+<div class="fragment" data-fragment-index="1">
+
 Beispiel für `.gitignore`:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 ```gitignore
 dist/
@@ -755,9 +993,19 @@ TestResults/
 git-summary.txt
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Die Regeln wirken nur auf Dateien, **die Git noch nicht verfolgt**. Ein schon committeter Report bleibt drin, ein committetes Geheimnis bleibt in der Historie.
 
+</div>
+
+<div class="fragment" data-fragment-index="4">
+
 Die Pipeline kann ein ignoriertes ZIP trotzdem bauen und als Artifact weitergeben. Ins Repository muss es dafür nicht.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -767,15 +1015,27 @@ Die Pipeline kann ein ignoriertes ZIP trotzdem bauen und als Artifact weitergebe
 
 ## `git restore --staged`
 
+<div class="fragment" data-fragment-index="1">
+
 ```bash
 git restore --staged ListFiles.ps1
 git status --short
 git diff -- ListFiles.ps1
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 Git nimmt die Datei wieder aus dem Index (zurück auf den letzten Commit). **Ihre Änderung im Working Tree bleibt.**
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Vorsicht: `git restore ListFiles.ps1` ohne `--staged` überschreibt die Datei im Working Tree mit dem Indexstand. Was nicht im Index lag, ist weg.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -785,7 +1045,13 @@ Vorsicht: `git restore ListFiles.ps1` ohne `--staged` überschreibt die Datei im
 
 ## `git clone`
 
+<div class="fragment" data-fragment-index="1">
+
 Beispieladresse, nicht unser GitLab:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 ```bash
 git clone https://gitlab.example.org/team/banana.git
@@ -793,9 +1059,19 @@ cd banana
 git remote -v
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 `git clone` lädt das Repository herunter und richtet `origin` als Remote ein. Branches und Historie kommen mit. Issues und Review-Kommentare bleiben in GitLab.
 
+</div>
+
+<div class="fragment" data-fragment-index="4">
+
 `origin` ist nur der übliche Name für ein Remote. Ob dort der offizielle Stand des Teams liegt, verrät der Name nicht.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -805,15 +1081,19 @@ git remote -v
 
 ## `git fetch`
 
+<div class="fragment" data-fragment-index="1">
+
 ```bash
 git fetch origin
 git log --oneline HEAD..origin/main
 ```
 
-<img src="figs/git-fetch-nachher.png" alt="Nach fetch zeigt origin/main lokal auf C, main bleibt auf A." style="object-fit: scale-down" class="fragment" data-fragment-index="1">
+</div>
+
+<img src="figs/git-fetch-nachher.png" alt="Nach fetch zeigt origin/main lokal auf C, main bleibt auf A." style="object-fit: scale-down" class="fragment" data-fragment-index="2">
 
 
-<div class="fragment" data-fragment-index="2">
+<div class="fragment" data-fragment-index="3">
 
 `fetch` lädt B und C herunter und setzt `origin/main` auf C. Ihr `main` und Ihre Dateien bleiben auf A. `git log` listet die Commits, die in `origin/main` sind, in `HEAD` aber noch nicht.
 
@@ -827,16 +1107,32 @@ git log --oneline HEAD..origin/main
 
 ## `git pull --ff-only`
 
+<div class="fragment" data-fragment-index="1">
+
 Wenn `main` keine offenen Änderungen hat und `origin` folgt:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 ```bash
 git switch main
 git pull --ff-only
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 `pull` holt Commits und baut sie ein. `--ff-only` aktualisiert nur, wenn Ihr `main` keine eigenen Commits hat, die im Remote fehlen.
 
+</div>
+
+<div class="fragment" data-fragment-index="4">
+
 Haben beide Seiten neue Commits, bricht der Befehl ab. Schauen Sie dann in die Historie und **wählen Sie Merge oder Rebase**, statt etwas zu erzwingen.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -846,16 +1142,32 @@ Haben beide Seiten neue Commits, bricht der Befehl ab. Schauen Sie dann in die H
 
 ## `git push`
 
+<div class="fragment" data-fragment-index="1">
+
 Angenommen, Sie haben den Branch `feature/dateiliste` schon lokal:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 ```bash
 git push -u origin feature/dateiliste
 git branch -vv
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Der erste Push legt den Branch in GitLab an. `-u` verknüpft ihn mit Ihrem lokalen Branch. Danach überträgt `git push` nur neue Commits.
 
+</div>
+
+<div class="fragment" data-fragment-index="4">
+
 **Ein Push bringt nichts nach `main`.** Dafür gibt es den vereinbarten Weg, zum Beispiel einen Merge Request.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -865,13 +1177,21 @@ Der erste Push legt den Branch in GitLab an. `-u` verknüpft ihn mit Ihrem lokal
 
 ## Diagnose: Push abgelehnt
 
+<div class="fragment" data-fragment-index="1">
+
 | Meldung | Möglicher Grund | Was Sie prüfen |
 |---|---|---|
 | Authentifizierung abgelehnt | Falsches Remote oder falscher Account | Remote-URL und Anmeldedaten |
 | `non-fast-forward` | Remote hat neue Commits | `fetch`, dann Historie vergleichen |
 | Geschützter Branch | Kein Pushrecht für diesen Branch | Zielbranch und Schutzregel |
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 Ein Force-Push hilft weder bei fehlenden Rechten noch bei inhaltlichen Fragen. Er kann Commits im Remote überschreiben: **keine Standardlösung**.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -881,7 +1201,13 @@ Ein Force-Push hilft weder bei fehlenden Rechten noch bei inhaltlichen Fragen. E
 
 ## Web Editor und Web IDE
 
+<div class="fragment" data-fragment-index="1">
+
 **Wozu:** Dateien direkt in GitLab ändern, ohne Clone und ohne lokales Git.
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 | Web Editor | Web IDE |
 |---|---|
@@ -889,7 +1215,13 @@ Ein Force-Push hilft weder bei fehlenden Rechten noch bei inhaltlichen Fragen. E
 | Kleiner README-Fix | Code, Test und README gemeinsam ändern |
 | Änderung committen | Änderungen auswählen und committen |
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Jede Änderung im Browser ist ein normaler Commit, mit Branch und Review wie lokal. Tests laufen dort nicht, sie starten erst in der Pipeline.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -916,17 +1248,33 @@ Die Ausgabe war bisher nicht unbedingt falsch sortiert. Neu ist: **Die Reihenfol
 
 ## Labels und Scoped Labels
 
+<div class="fragment" data-fragment-index="1">
+
 | Normales Label | Bedeutung bei uns |
 |---|---|
 | `bug` | Skript tut nicht, was es soll |
 | `documentation` | Beschreibung oder Beispiele ändern |
 | `ready-for-review` | Laut Teamabsprache bereit fürs Review |
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 Die Namen legt das Team fest, GitLab gibt sie nicht vor. Ein Issue kann mehrere normale Labels tragen. Die gibt es in **Free**.
+
+</div>
+
+<div class="fragment" data-fragment-index="3">
 
 **Scoped Labels** wie `workflow::ready` schließen sich gegenseitig aus und brauchen **Premium / Ultimate**.
 
+</div>
+
+<div class="fragment" data-fragment-index="4">
+
 [GitLab: Scoped labels](https://docs.gitlab.com/user/project/labels/#scoped-labels)
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -936,7 +1284,13 @@ Die Namen legt das Team fest, GitLab gibt sie nicht vor. Ein Issue kann mehrere 
 
 ## Milestones
 
+<div class="fragment" data-fragment-index="1">
+
 **Beispiel:** „Dateiliste 1.0“
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 | Issue im Milestone | Wozu |
 |---|---|
@@ -944,7 +1298,13 @@ Die Namen legt das Team fest, GitLab gibt sie nicht vor. Ein Issue kann mehrere 
 | Skript und Test ändern | Sortieren einbauen und testen |
 | README aktualisieren | Verhalten erklären |
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Ein Projekt-Milestone sammelt Issues eines Projekts, ein Gruppen-Milestone auch aus mehreren. Schließen Sie einen Milestone, **bleiben seine offenen Issues offen**.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -954,16 +1314,32 @@ Ein Projekt-Milestone sammelt Issues eines Projekts, ein Gruppen-Milestone auch 
 
 ## Issue und Merge Request verknüpfen
 
+<div class="fragment" data-fragment-index="1">
+
 Beispiel für die MR-Beschreibung:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 ```markdown
 Sortiert die Dateiliste aufsteigend nach Namen.
 Closes #12
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Das Issue sagt **warum**, der MR zeigt **wie**, dort läuft das Review.
 
+</div>
+
+<div class="fragment" data-fragment-index="4">
+
 `Closes #12` schließt das Issue, sobald der MR in den Default-Branch gemergt wird. Voraussetzung: Automatisches Schließen ist an, und wer mergt, darf das Issue schließen.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -973,6 +1349,8 @@ Das Issue sagt **warum**, der MR zeigt **wie**, dort läuft das Review.
 
 ## README des Banana Project
 
+<div class="fragment" data-fragment-index="1">
+
 ```markdown
 # Banana Project
 
@@ -981,9 +1359,19 @@ Jede Zeile enthält Dateiname und Größe in Bytes.
 Die Ausgabe ist aufsteigend nach Dateinamen sortiert.
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 `-Path` gibt das Verzeichnis an. Ohne `-Path` nimmt das Skript `.`.
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Steht die Sortierung nur im README, sortiert das Skript noch nicht. **README, Skript und Test** müssen dasselbe sagen.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -993,7 +1381,13 @@ Steht die Sortierung nur im README, sortiert das Skript noch nicht. **README, Sk
 
 ## Ein Thema pro Änderung
 
+<div class="fragment" data-fragment-index="1">
+
 So soll `ListFiles.ps1` danach aussehen:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 ```powershell
 Get-ChildItem -LiteralPath $Path -File -ErrorAction Stop |
@@ -1001,9 +1395,19 @@ Get-ChildItem -LiteralPath $Path -File -ErrorAction Stop |
     ForEach-Object { '{0} - {1} Bytes' -f $_.Name, $_.Length }
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Geändert wird nur die Reihenfolge. Format, Dateiauswahl und Fehlerbehandlung bleiben, wie sie sind.
 
+</div>
+
+<div class="fragment" data-fragment-index="4">
+
 Test und README zur Sortierung gehören dazu. Wollen Sie nebenbei umbauen, machen Sie dafür eine eigene Änderung: Sonst wird das Review mühsam.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1013,13 +1417,21 @@ Test und README zur Sortierung gehören dazu. Wollen Sie nebenbei umbauen, mache
 
 ## Rückblick Teil II
 
+<div class="fragment" data-fragment-index="1">
+
 | Sie sehen | Offene Frage |
 |---|---|
 | Skript bearbeitet | Ist der richtige Stand im Index? |
 | Commit lokal da | Ist er im richtigen Remote angekommen? |
 | Code in GitLab | Sagen Issue, README und Test dasselbe? |
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 Jetzt arbeiten mehrere mit: **Was passiert, wenn andere `main` ändern, während wir arbeiten?**
+
+</div>
 </div></script></section></section><section ><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1079,7 +1491,13 @@ Im Working Tree sehen Sie den ausgecheckten Branch. Ein Branch legt **keinen zwe
 
 ## Feature-Branch anlegen: `git switch -c`
 
+<div class="fragment" data-fragment-index="1">
+
 Sauber starten:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 ```bash
 git switch main
@@ -1088,7 +1506,13 @@ git switch -c feature/dateiliste
 git branch --show-current
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Damit starten Sie auf dem aktuellen `main`. Während Sie arbeiten, kommen dort neue Commits dazu. Im Feature-Branch liegt **nur Ihre Änderung**. Beim Zusammenführen kann es trotzdem später Konflikte geben.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1176,13 +1600,21 @@ Trunk-Based heißt **nicht automatisch: direkt pushen ohne Prüfung**. Eine form
 
 ## Auswahl der Branching-Strategie
 
+<div class="fragment" data-fragment-index="1">
+
 | Situation | Was das Team regeln muss |
 |---|---|
 | Mehrere Versionen gleichzeitig pflegen | Wege für Releases und Hotfixes festlegen |
 | Eigener Stand pro Umgebung | Wer bringt was in welche Umgebung? |
 | Kleine Änderungen häufig mergen | Review und Tests müssen schnell sein |
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 **Branching-Strategie, Merge-Methode und Freigabe für Produktion sind drei getrennte Entscheidungen.**
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1192,15 +1624,27 @@ Trunk-Based heißt **nicht automatisch: direkt pushen ohne Prüfung**. Eine form
 
 ## Protected Branches: Einstellungen
 
+<div class="fragment" data-fragment-index="1">
+
 | Einstellung | Regelt |
 |---|---|
 | **Allowed to merge** | Wer über einen Merge Request mergen darf |
 | **Allowed to push and merge** | Wer direkt pushen und mergen darf |
 | **Allowed to force push** | Wer den geschützten Branch umschreiben darf |
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 Branch-Schutz nach Rollen gibt es in **Free**. Ob Developer oder nur Maintainer mergen dürfen, steht in der Regel selbst. „Protected“ allein sagt das nicht.
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 [GitLab: Protected branches](https://docs.gitlab.com/user/project/repository/branches/protected/)
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1210,7 +1654,13 @@ Branch-Schutz nach Rollen gibt es in **Free**. Ob Developer oder nur Maintainer 
 
 ## Direkten Push auf `main` sperren
 
+<div class="fragment" data-fragment-index="1">
+
 Beispiel: Änderungen kommen nur per MR auf `main`.
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 | Einstellung | Gewählter Wert |
 |---|---|
@@ -1218,9 +1668,19 @@ Beispiel: Änderungen kommen nur per MR auf `main`.
 | Allowed to push and merge | **No one** |
 | Allowed to force push | Deaktiviert |
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 **„Nicht konfiguriert“ ist nicht dasselbe wie „No one“.** Weitere Regeln (Wildcard, Gruppe) können zusätzliche Rechte geben. Entscheidend ist, was alle Regeln zusammen erlauben.
 
+</div>
+
+<div class="fragment" data-fragment-index="4">
+
 [GitLab: Push and merge permissions](https://docs.gitlab.com/user/project/repository/branches/protected/#push-and-merge-permissions)
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1230,15 +1690,31 @@ Beispiel: Änderungen kommen nur per MR auf `main`.
 
 ## Parallele Änderungen und Merge-Konflikte
 
+<div class="fragment" data-fragment-index="1">
+
 Ändern zwei Branches verschiedene Stellen, führt Git das meist selbst zusammen. Ändern beide dieselbe Stelle, müssen Sie entscheiden.
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 **Beispiel:** Beide Branches ersetzen dieselbe README-Zeile:
+
+</div>
+
+<div class="fragment" data-fragment-index="3">
 
 | Feature-Branch | Inzwischen geänderter `main` |
 |---|---|
 | „Ausgabe nach Namen sortiert“ | „Ausgabe enthält Größen in Bytes“ |
 
+</div>
+
+<div class="fragment" data-fragment-index="4">
+
 Beide Zeilen sind richtig. Git weiß nicht, was in der README stehen soll. Umgekehrt kann ein **Merge ohne Konflikt inhaltlich falsch** sein.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1248,6 +1724,8 @@ Beide Zeilen sind richtig. Git weiß nicht, was in der README stehen soll. Umgek
 
 ## Konflikt im Feature-Branch: `git merge origin/main`
 
+<div class="fragment" data-fragment-index="1">
+
 ```bash
 git switch feature/dateiliste
 git fetch origin
@@ -1255,13 +1733,27 @@ git merge origin/main
 git status
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 Mögliche Ausgabe:
+
+</div>
+
+<div class="fragment" data-fragment-index="3">
 
 ```text
 CONFLICT (content): Merge conflict in README.md
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="4">
+
 Hier holen wir den aktuellen `main` **in den Feature-Branch**. `main` selbst bleibt dabei unverändert.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1271,7 +1763,13 @@ Hier holen wir den aktuellen `main` **in den Feature-Branch**. `main` selbst ble
 
 ## Konfliktmarker in der Datei
 
+<div class="fragment" data-fragment-index="1">
+
 Bei diesem Merge steht `HEAD` für den aktuellen Feature-Branch:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 ```text
 <<<<<<< HEAD
@@ -1281,7 +1779,13 @@ Ausgabe enthält Größen in Bytes.
 >>>>>>> origin/main
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Zwischen den Markern steht der Konflikt. Nicht einfach eine Seite übernehmen, sondern fragen: **Was muss am Ende in der README stehen?**
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1291,12 +1795,22 @@ Zwischen den Markern steht der Konflikt. Nicht einfach eine Seite übernehmen, s
 
 ## Konflikt auflösen: `git add` und Commit
 
+<div class="fragment" data-fragment-index="1">
+
 Gemeinsam vereinbarter README-Text:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 ```markdown
 Ausgabe aufsteigend nach Namen sortiert;
 Größen werden in Bytes angegeben.
 ```
+
+</div>
+
+<div class="fragment" data-fragment-index="3">
 
 ```bash
 git add README.md
@@ -1304,7 +1818,13 @@ git diff --staged
 git commit -m "merge: integriere aktuellen main"
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="4">
+
 `add` markiert den Konflikt als gelöst. Ob Text und Skript stimmen, prüft Git nicht. **Tests und Review müssen zeigen, dass beides erfüllt ist.**
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1331,7 +1851,13 @@ Merge behält die Historie, Rebase schreibt sie neu. Schon gepushte Commits schr
 
 ## Merge Request: Source, Target, Diff, Review
 
+<div class="fragment" data-fragment-index="1">
+
 Für unsere Änderung:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 | Feld | Bedeutung |
 |---|---|
@@ -1340,7 +1866,13 @@ Für unsere Änderung:
 | **Diff** | Was sich gegenüber `main` ändert |
 | **Review** | Diskussion und Entscheidung zur Änderung |
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Jeder neue Push auf den Source-Branch aktualisiert den MR. **MR ohne Merge schließen: Kein Code landet in `main`.**
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1349,6 +1881,8 @@ Jeder neue Push auf den Source-Branch aktualisiert den MR. **MR ohne Merge schli
 <div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
 
 ## MR-Beschreibung
+
+<div class="fragment" data-fragment-index="1">
 
 ```markdown
 ## Änderung
@@ -1363,7 +1897,13 @@ Bytezahlen und Ausschluss von Verzeichnissen bleiben erhalten.
 Welche Sortierregeln sollen für Umlaute gelten?
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 Ein konkret genannter Test sagt mehr als „alles grün“. Die offene Frage steht sichtbar in der Beschreibung, nicht versteckt im Diff.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1373,6 +1913,8 @@ Ein konkret genannter Test sagt mehr als „alles grün“. Die offene Frage ste
 
 ## Rollen im Merge Request
 
+<div class="fragment" data-fragment-index="1">
+
 | Rolle im Review | Aufgabe |
 |---|---|
 | **Autor** | Erklärt und korrigiert die Änderung |
@@ -1380,7 +1922,13 @@ Ein konkret genannter Test sagt mehr als „alles grün“. Die offene Frage ste
 | **Assignee** | Ist für den MR zuständig |
 | **Person mit Merge-Recht** | Führt den Merge aus |
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 Die Rollen sagen, wer was tut. Wer als Reviewer eingetragen ist, bekommt dadurch **kein Merge-Recht**. Das regeln Projektrolle und Branch-Schutz.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1390,13 +1938,29 @@ Die Rollen sagen, wer was tut. Wer als Reviewer eingetragen ist, bekommt dadurch
 
 ## Review-Kommentar und Suggestion
 
+<div class="fragment" data-fragment-index="1">
+
 Kommentar zum Test:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 > Der Test verwendet nur eine Datei. So fällt eine falsche Reihenfolge nicht auf. Bitte testen Sie mit zwei verschieden benannten Dateien und prüfen Sie die erste Zeile.
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Der Kommentar sagt: **Was fällt auf → was folgt daraus → was soll geändert werden**.
 
+</div>
+
+<div class="fragment" data-fragment-index="4">
+
 Ein Suggestion-Block schlägt eine Codeänderung direkt vor. Ob sie stimmt, entscheidet trotzdem das Review.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1406,7 +1970,13 @@ Ein Suggestion-Block schlägt eine Codeänderung direkt vor. Ob sie stimmt, ents
 
 ## Sortiertest mit zwei Dateinamen
 
+<div class="fragment" data-fragment-index="1">
+
 Gekürzter Ausschnitt; `$listScript` und `$folder` sind schon angelegt:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 ```powershell
 [IO.File]::WriteAllText((Join-Path $folder 'beta.txt'), 'bb')
@@ -1417,7 +1987,13 @@ $rows[0] | Should -Be 'alpha.txt - 1 Bytes'
 $rows[1] | Should -Be 'beta.txt - 2 Bytes'
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Mit **zwei verschiedenen Namen** fällt eine absteigende Sortierung auf. Wie Umlaute oder Groß-/Kleinschreibung sortiert werden, testen diese Namen noch nicht.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1427,11 +2003,23 @@ Mit **zwei verschiedenen Namen** fällt eine absteigende Sortierung auf. Wie Uml
 
 ## Review-Threads und Resolved
 
+<div class="fragment" data-fragment-index="1">
+
 Der Reviewer fragt direkt an der Zeile. Der Autor antwortet oder ergänzt den Test. Dann wird geprüft: Ist die Frage beantwortet?
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 **Resolved** heißt: Die Diskussion ist erledigt. Es heißt nicht, dass der Code stimmt.
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Mit der Einstellung **All threads must be resolved** blockieren offene Threads den Merge. Ohne diese Einstellung kann trotz offener Threads gemergt werden.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1441,14 +2029,26 @@ Mit der Einstellung **All threads must be resolved** blockieren offene Threads d
 
 ## Approvals nach Tier
 
+<div class="fragment" data-fragment-index="1">
+
 | Mechanismus | Wirkung | Tier |
 |---|---|---|
 | Optionales Approval | Zustimmung, aber kein Muss | **Free** |
 | Erforderliche Approval-Regel | Merge erst nach festgelegten Zustimmungen | **Premium / Ultimate** |
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 Auf Free kann das Team Review **fest vereinbaren**. GitLab erzwingt das Approval dann aber nicht.
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 [GitLab: Merge request approvals](https://docs.gitlab.com/user/project/merge_requests/approvals/)
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1458,6 +2058,8 @@ Auf Free kann das Team Review **fest vereinbaren**. GitLab erzwingt das Approval
 
 ## Merge-Gates: Bedingung und Einstellung
 
+<div class="fragment" data-fragment-index="1">
+
 | Bedingung | Einstellung in GitLab |
 |---|---|
 | Diese Person darf mergen | Rolle und Branch-Schutz |
@@ -1466,7 +2068,13 @@ Auf Free kann das Team Review **fest vereinbaren**. GitLab erzwingt das Approval
 | Der MR ist fertig, es folgen keine Commits mehr | Nicht mehr **Draft**, sondern **Ready** |
 | Bestimmte Zustimmungen sind nötig | Approval-Regeln (je nach Lizenz) |
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 Eine rote Pipeline blockiert den Merge nur, wenn das Projekt so eingestellt ist. Auch bei grünem Button prüfen Sie den **letzten Commit** inhaltlich selbst.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1476,15 +2084,27 @@ Eine rote Pipeline blockiert den Merge nur, wenn das Projekt so eingestellt ist.
 
 ## Merge-Methoden in GitLab
 
+<div class="fragment" data-fragment-index="1">
+
 | GitLab-Methode | Ergebnis |
 |---|---|
 | **Merge commit** | Eigener Merge-Commit |
 | **Merge commit with semi-linear history** | Merge-Commit, nur wenn Fast-Forward möglich |
 | **Fast-forward merge** | Zielbranch rückt ohne Merge-Commit vor |
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 Alle drei gibt es in **Free**. Hat sich `main` weiterbewegt, müssen Sie eventuell aktualisieren oder rebasen. Keine Methode stellt sicher, dass **der zusammengeführte Stand** getestet wurde.
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 [GitLab: Merge methods](https://docs.gitlab.com/user/project/merge_requests/methods/)
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1494,11 +2114,21 @@ Alle drei gibt es in **Free**. Hat sich `main` weiterbewegt, müssen Sie eventue
 
 ## Squash beim Merge
 
+<div class="fragment" data-fragment-index="1">
+
 Angenommen, der Source-Branch enthält drei Arbeitscommits:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 ```bash
 git log --oneline main..feature/dateiliste
 ```
+
+</div>
+
+<div class="fragment" data-fragment-index="3">
 
 ```text
 e4b19c2 README präzisieren
@@ -1506,7 +2136,13 @@ e4b19c2 README präzisieren
 3c5f2e8 Implementierung sortieren
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="4">
+
 **Squash** fasst sie zu einem neuen Commit auf dem Zielbranch zusammen. In GitLab ist das der Haken **Squash commits** im MR. Ob noch ein Merge-Commit dazukommt, hängt von der Merge-Methode ab.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1516,6 +2152,8 @@ e4b19c2 README präzisieren
 
 ## Squash lokal: `git merge --squash`
 
+<div class="fragment" data-fragment-index="1">
+
 ```bash
 git switch main
 git merge --squash feature/dateiliste
@@ -1524,9 +2162,19 @@ git commit -m "feat: sortiere Dateiliste nach Namen"
 git log --oneline -2
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 `merge --squash` übernimmt die Änderungen aller drei Commits in Working Tree und Index, legt aber **keinen Commit** an. Den schreiben Sie selbst mit einer Nachricht für die ganze Änderung.
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Die drei Commits bleiben im Source-Branch erhalten. Für die nächste Änderung starten Sie am besten einen neuen Branch.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1536,12 +2184,16 @@ Die drei Commits bleiben im Source-Branch erhalten. Für die nächste Änderung 
 
 ## Reviewweg
 
+<div class="fragment" data-fragment-index="1">
+
 1. &shy;<!-- .element: class="fragment" data-fragment-index="1" -->Der MR erklärt: Warum, was genau, welche Tests? 
 1. &shy;<!-- .element: class="fragment" data-fragment-index="2" -->Der Reviewer prüft und schreibt seine Kommentare. 
 1. &shy;<!-- .element: class="fragment" data-fragment-index="3" -->Der Autor antwortet und passt die Änderung an. 
 1. &shy;<!-- .element: class="fragment" data-fragment-index="4" -->Wer Merge-Recht hat, mergt, sobald die Merge-Checks erfüllt sind. 
 
-<div class="fragment" data-fragment-index="5">
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 Eine Tabelle im README kann festhalten, **wer was prüft**. Das ersetzt kein Approval, das GitLab erzwingt.
 
@@ -1570,9 +2222,17 @@ Eine Tabelle im README kann festhalten, **wer was prüft**. Das ersetzt kein App
 
 ## Rückblick Teil III
 
+<div class="fragment" data-fragment-index="1">
+
 Die Branching-Strategie passt dazu, wie das Team mergt. Die Konfliktlösung erfüllt beide Anforderungen. Der MR erklärt die Änderung; Review und Tests beziehen sich auf **das, was gemergt wird**.
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 Als Nächstes lassen wir diese Prüfung **automatisch als Job laufen** und schauen auf seinen Status.
+
+</div>
 </div></script></section></section><section ><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1607,7 +2267,13 @@ Als Nächstes lassen wir diese Prüfung **automatisch als Job laufen** und schau
 
 ## `.gitlab-ci.yml` und der getestete Commit
 
+<div class="fragment" data-fragment-index="1">
+
 GitLab liest **`.gitlab-ci.yml`** im Repository-Root. Die Datei legt Jobs und Ablauf fest; ein anderer Pfad ist einstellbar.
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 | Was im Repository passiert | Was folgt |
 |---|---|
@@ -1615,7 +2281,13 @@ GitLab liest **`.gitlab-ci.yml`** im Repository-Root. Die Datei legt Jobs und Ab
 | Commit B bringt den neuen Testaufruf | Neue Pipeline nötig |
 | Branchname bleibt gleich | Der Commit kann trotzdem ein anderer sein |
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Eine grüne Pipeline gilt nur für ihren Commit. Für später gepushte sagt sie nichts.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1625,6 +2297,8 @@ Eine grüne Pipeline gilt nur für ihren Commit. Für später gepushte sagt sie 
 
 ## Pipeline, Job, Stage, Runner, Executor
 
+<div class="fragment" data-fragment-index="1">
+
 | Begriff | Aufgabe |
 |---|---|
 | **Pipeline** | Ein Durchlauf aller Jobs der CI-Konfiguration |
@@ -1633,7 +2307,13 @@ Eine grüne Pipeline gilt nur für ihren Commit. Für später gepushte sagt sie 
 | **Runner** | Nimmt passende Jobs an und führt sie aus |
 | **Executor** | Legt fest, in welcher Umgebung Jobs laufen |
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 Der Runner führt jeden Job einzeln aus, nicht die ganze Pipeline als ein Skript. Scope und Executor behandeln wir später.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1643,7 +2323,13 @@ Der Runner führt jeden Job einzeln aus, nicht die ganze Pipeline als ein Skript
 
 ## Erster Job: `hello`
 
+<div class="fragment" data-fragment-index="1">
+
 Ein Job für einen Runner, auf dem PowerShell installiert ist:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 ```yaml
 hello:
@@ -1651,9 +2337,19 @@ hello:
     - pwsh -NoProfile -Command 'Write-Output "COMMIT=$env:CI_COMMIT_SHORT_SHA"'
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 `hello` ist der Jobname, unter `script` steht das Kommando. `CI_COMMIT_SHORT_SHA` enthält die ersten 8 Zeichen der ID des Commits, der die Pipeline ausgelöst hat. `pwsh` schreibt sie ins Log.
 
+</div>
+
+<div class="fragment" data-fragment-index="4">
+
 Der Job zeigt nur: Der Runner läuft und kennt den Commit. Die Dateiliste testet er noch nicht.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1663,7 +2359,13 @@ Der Job zeigt nur: Der Runner läuft und kennt den Commit. Die Dateiliste testet
 
 ## `stages`: Reihenfolge der Jobs
 
+<div class="fragment" data-fragment-index="1">
+
 Nur zur Struktur: Beide Jobs geben bloß Text aus.
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 ```yaml
 stages: [test, package]
@@ -1675,7 +2377,13 @@ package:
   script: echo "Paket-Schritt"
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Die Reihenfolge legt `stages` fest, nicht die Position der Jobs im YAML. Was ein Job wirklich tut, steht **in seinen Kommandos**.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1685,12 +2393,20 @@ Die Reihenfolge legt `stages` fest, nicht die Position der Jobs im YAML. Was ein
 
 ## Fehlgeschlagener Job und folgende Stages
 
+<div class="fragment" data-fragment-index="1">
+
 | Ergebnis | Was danach passiert |
 |---|---|
 | Test rot | Stage `package` startet nicht |
 | Test grün | Stage `package` startet |
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 Läuft in derselben Stage schon ein anderer Job, bricht GitLab ihn nicht ab.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1700,9 +2416,17 @@ Läuft in derselben Stage schon ein anderer Job, bricht GitLab ihn nicht ab.
 
 ## Parallele Jobs derselben Stage
 
+<div class="fragment" data-fragment-index="1">
+
 Zwei Testjobs in derselben Stage können parallel laufen. Ob sie wirklich gleichzeitig starten, hängt davon ab, ob passende Runner frei sind.
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 Jeder Job läuft in seiner eigenen Umgebung: Eine Datei aus einem Job ist **im nächsten Job nicht automatisch da**.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1712,14 +2436,26 @@ Jeder Job läuft in seiner eigenen Umgebung: Eine Datei aus einem Job ist **im n
 
 ## `image`: Job-Image beim Docker-Executor
 
+<div class="fragment" data-fragment-index="1">
+
 ```yaml
 default:
   image: gitlab.devadze.de:5050/schulung/ci-image:7.5
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 Beim Docker-Executor nennt `image` das Image, in dem der Job läuft. Darin müssen Git, PowerShell und alles für die Tests schon installiert sein.
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Der Shell-Executor läuft dagegen direkt auf dem Host. Ein Image-Name **wählt keinen Executor und installiert keine Tools**. Auch einem „PowerShell-Image“ können Git und Module fehlen.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1729,7 +2465,13 @@ Der Shell-Executor läuft dagegen direkt auf dem Host. Ein Image-Name **wählt k
 
 ## Shell des Containers und `pwsh`
 
+<div class="fragment" data-fragment-index="1">
+
 Ausschnitt aus dem Job `test`:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 ```yaml
 test:
@@ -1738,9 +2480,19 @@ test:
     - pwsh -NoLogo -NoProfile -File ci/Test.ps1
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 In unserem Linux-Container liest zuerst eine Shell die Zeile. Erst `pwsh` startet dann PowerShell und führt die `.ps1`-Datei aus.
 
+</div>
+
+<div class="fragment" data-fragment-index="4">
+
 Längere Testlogik gehört **ins Skript im Repository**. Kopieren Sie PowerShell-Befehle nicht ungeprüft ins YAML: Dort liest Bash mit.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1750,7 +2502,13 @@ Längere Testlogik gehört **ins Skript im Repository**. Kopieren Sie PowerShell
 
 ## Pester: Testframework für PowerShell
 
+<div class="fragment" data-fragment-index="1">
+
 `ci/Test.ps1` führt die Tests mit **Pester** aus. Pester ist für PowerShell, was pytest für Python ist. Es ist im CI-Image installiert; lokal brauchen Sie es nicht.
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 ```powershell
 Describe 'ListFiles' {
@@ -1761,9 +2519,11 @@ Describe 'ListFiles' {
 }
 ```
 
-- &shy;<!-- .element: class="fragment" data-fragment-index="1" -->`Describe` fasst zusammengehörige Tests zusammen. 
-- &shy;<!-- .element: class="fragment" data-fragment-index="2" -->`It` ist ein einzelner Test. 
-- &shy;<!-- .element: class="fragment" data-fragment-index="3" -->`Should` prüft das Ergebnis. Stimmt es nicht, ist der Test rot.
+</div>
+
+- &shy;<!-- .element: class="fragment" data-fragment-index="3" -->`Describe` fasst zusammengehörige Tests zusammen. 
+- &shy;<!-- .element: class="fragment" data-fragment-index="4" -->`It` ist ein einzelner Test. 
+- &shy;<!-- .element: class="fragment" data-fragment-index="5" -->`Should` prüft das Ergebnis. Stimmt es nicht, ist der Test rot.
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1773,7 +2533,13 @@ Describe 'ListFiles' {
 
 ## Exit-Code des Testskripts
 
+<div class="fragment" data-fragment-index="1">
+
 Der Runner sieht nur den Exit-Code des Prozesses, nicht die Testergebnisse.
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 | Testlauf | Das Skript muss liefern |
 |---|---|
@@ -1781,12 +2547,22 @@ Der Runner sieht nur den Exit-Code des Prozesses, nicht die Testergebnisse.
 | Mindestens ein Test rot | Exit-Code ungleich `0` |
 | Tests laufen nicht oder fehlen | Auch ungleich `0` |
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Die entscheidenden Zeilen aus unserem Testskript:
+
+</div>
+
+<div class="fragment" data-fragment-index="4">
 
 ```powershell
 if ($run.TotalCount -eq 0 -or $run.Result -ne 'Passed') { exit 1 }
 exit 0
 ```
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1796,12 +2572,20 @@ exit 0
 
 ## Was ein Test findet und was nicht
 
+<div class="fragment" data-fragment-index="1">
+
 | Fehler im Code | Test |
 |---|---|
 | Falsche Sortierrichtung (`-Descending`) | **rot**: erste Zeile ist `beta.txt` statt `alpha.txt` |
 | `Sort-Object` fehlt ganz | **oft grün**: das Dateisystem liefert die Namen schon sortiert |
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 **Ein grüner Test zeigt nur, dass das Geprüfte stimmt. Was der Test nicht prüft, kann trotzdem falsch sein.**
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1811,7 +2595,13 @@ exit 0
 
 ## `-ForceFailure`: absichtlicher Testfehler
 
+<div class="fragment" data-fragment-index="1">
+
 Unser Testskript kann außerdem absichtlich scheitern:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 ```yaml
 test:
@@ -1820,9 +2610,19 @@ test:
     - pwsh -NoProfile -File ci/Test.ps1 -ForceFailure
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 `-ForceFailure` lässt einen Test absichtlich scheitern. So sehen wir, ob die Kette hält: **Test rot → Exit-Code `1` → Job rot**.
 
+</div>
+
+<div class="fragment" data-fragment-index="4">
+
 Der rote Job heißt hier nicht, dass `ListFiles.ps1` falsch ist. Das klärt der Sortiertest: **Sortiert das Skript richtig?**
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1832,15 +2632,31 @@ Der rote Job heißt hier nicht, dass `ListFiles.ps1` falsch ist. Das klärt der 
 
 ## Joblog im Fehlerfall: Testergebnis und Exit-Code
 
+<div class="fragment" data-fragment-index="1">
+
 Erwartete Logzeile beim absichtlichen Testfehler:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 ```text
 TESTS: total=5 passed=4 failed=1
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Zusätzlich endet das Testskript mit Exit-Code `1`. Fehlt dieser Exit-Code, wird der Job grün, obwohl ein Test fehlschlug.
 
+</div>
+
+<div class="fragment" data-fragment-index="4">
+
 **Lesen Sie beides:** Was meldet das Testwerkzeug, und welchen Exit-Code sieht der Runner?
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1850,7 +2666,13 @@ Zusätzlich endet das Testskript mit Exit-Code `1`. Fehlt dieser Exit-Code, wird
 
 ## `artifacts`: Dateien aus dem Job `package`
 
+<div class="fragment" data-fragment-index="1">
+
 Ausschnitt; das Skript `ci/Package.ps1` baut das ZIP:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 ```yaml
 package:
@@ -1860,9 +2682,19 @@ package:
     paths: [dist/]
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Das ZIP baut das Skript. `paths` sammelt nur ein, was danach im Projektverzeichnis liegt.
 
+</div>
+
+<div class="fragment" data-fragment-index="4">
+
 Das Artifact gehört zu diesem Joblauf. **Git-Tag, Historie und dauerhafte Ablage** brauchen eigene Schritte.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1872,16 +2704,32 @@ Das Artifact gehört zu diesem Joblauf. **Git-Tag, Historie und dauerhafte Ablag
 
 ## ZIP und Prüfsumme im Job `package`
 
+<div class="fragment" data-fragment-index="1">
+
 `ci/Package.ps1` erzeugt zum Beispiel:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 ```text
 dist/banana-project-local.zip
 dist/banana-project-local.zip.sha256
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Die Prüfsumme passt nur zu **diesem ZIP**. Für ein später neu gebautes ZIP gilt sie nicht. Am Dateinamen allein erkennen Sie nicht, welches ZIP es ist.
 
+</div>
+
+<div class="fragment" data-fragment-index="4">
+
 Übergeben können Sie das Artifact erst, wenn die Dateien da sind und zum richtigen Commit gehören. Ist `dist/` leer, hilft auch ein grüner Job nichts.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1891,18 +2739,26 @@ Die Prüfsumme passt nur zu **diesem ZIP**. Für ein später neu gebautes ZIP gi
 
 ## Jobstatus `pending`, `running`, `failed`
 
+<div class="fragment" data-fragment-index="1">
+
 | Zustand | Was Sie prüfen |
 |---|---|
 | **pending** | Job wartet auf einen Runner; ist ein passender Runner frei? |
 | **running** | Job läuft; im Log das aktuelle Kommando ansehen: Hängt es irgendwo? |
 | **failed** | Job oder seine Vorbereitung ist gescheitert; erste echte Fehlermeldung im Log suchen |
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 Zwei Fälle, in denen die Tests gar nicht laufen:
 
-- &shy;<!-- .element: class="fragment" data-fragment-index="1" -->Kein passender Runner frei: Der Job bleibt `pending`. 
-- &shy;<!-- .element: class="fragment" data-fragment-index="2" -->Im Image fehlt `pwsh`: Der Job startet und scheitert sofort (`failed`). 
+</div>
 
-<div class="fragment" data-fragment-index="3">
+- &shy;<!-- .element: class="fragment" data-fragment-index="3" -->Kein passender Runner frei: Der Job bleibt `pending`. 
+- &shy;<!-- .element: class="fragment" data-fragment-index="4" -->Im Image fehlt `pwsh`: Der Job startet und scheitert sofort (`failed`). 
+
+<div class="fragment" data-fragment-index="5">
 
 **Ein hängender oder roter Job heißt also nicht, dass ein Test rot ist.** Erst im Log nachsehen, ob die Tests überhaupt gelaufen sind.
 
@@ -1916,7 +2772,13 @@ Zwei Fälle, in denen die Tests gar nicht laufen:
 
 ## YAML-Einrückung von `script`
 
+<div class="fragment" data-fragment-index="1">
+
 **Richtig:** `script` ist eingerückt und gehört zum Job `test`.
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 ```yaml
 test:
@@ -1924,7 +2786,15 @@ test:
     - echo "Prüfen"
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 **Falsch:** `script` steht auf derselben Ebene wie `test`. GitLab hält beide für eigene Jobs, und keiner hat ein `script`.
+
+</div>
+
+<div class="fragment" data-fragment-index="4">
 
 ```yaml
 test:
@@ -1932,7 +2802,13 @@ script:
   - echo "Prüfen"
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="5">
+
 GitLab startet keine Pipeline und meldet: `jobs test config should implement the script:, run:, or trigger: keyword`
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1942,7 +2818,13 @@ GitLab startet keine Pipeline und meldet: `jobs test config should implement the
 
 ## Pipeline mit `test` und `package`
 
+<div class="fragment" data-fragment-index="1">
+
 Setzt die Skripte `ci/Test.ps1` und `ci/Package.ps1` voraus:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 ```yaml
 stages: [test, package]
@@ -1958,7 +2840,13 @@ package:
     paths: [dist/]
 ```
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 **Erst Tests grün, dann ZIP bauen.**
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1968,7 +2856,13 @@ package:
 
 ## Joblog: Commit, Kommando, Fehlermeldung
 
+<div class="fragment" data-fragment-index="1">
+
 Der Branchname reicht nicht: Nach jedem Push kann er auf einen anderen Commit zeigen.
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 | Im roten Job | Sagt Ihnen |
 |---|---|
@@ -1977,7 +2871,13 @@ Der Branchname reicht nicht: Nach jedem Push kann er auf einen anderen Commit ze
 | Erste echte Fehlermeldung | Test rot, Tool fehlt oder Übertragung gescheitert? |
 | Status | Wie der Job endete |
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Die letzte Logzeile meldet oft nur den Fehler. Die **Ursache** steht meist weiter oben.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1987,16 +2887,32 @@ Die letzte Logzeile meldet oft nur den Fehler. Die **Ursache** steht meist weite
 
 ## Retry und neuer Commit nach der Korrektur
 
+<div class="fragment" data-fragment-index="1">
+
 So soll es laufen (ohne `allow_failure`):
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 | Commit | Test | ZIP bauen |
 |---|---|---|
 | Commit mit absichtlichem Fehler | Rot | Startet nicht |
 | Neuer Commit mit Korrektur | Test läuft neu | Erst wenn Test grün |
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Ein Retry startet den alten Job mit dem alten Code. Die Korrektur muss als **neuer Commit** gepusht werden, damit eine neue Pipeline sie testet.
 
+</div>
+
+<div class="fragment" data-fragment-index="4">
+
 „Korrigiert“ heißt: Code geändert, Tests passen, neuer Lauf.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -2006,13 +2922,29 @@ Ein Retry startet den alten Job mit dem alten Code. Die Korrektur muss als **neu
 
 ## Merge-Bedingung „Pipelines must succeed“
 
+<div class="fragment" data-fragment-index="1">
+
 Die Pipeline zeigt, ob ihre Jobs grün sind. Mit der Projekteinstellung **Pipelines must succeed** lässt GitLab den Merge erst zu, wenn die Pipeline grün ist.
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
 
 Gibt es mehrere Pipelines, zählt oft die MR-Pipeline. Schauen Sie deshalb auf den Status im MR, nicht auf irgendeinen grünen oder roten Lauf.
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Review, Branch-Rechte und erledigte Threads sind eigene Bedingungen. Ein grüner Test ersetzt kein Approval, ein Approval keinen Test.
 
+</div>
+
+<div class="fragment" data-fragment-index="4">
+
 **Im Beispiel:** Der Sortiertest muss auf dem letzten Commit gelaufen sein, und der MR muss den vereinbarten Merge-Regeln folgen.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -2022,9 +2954,17 @@ Review, Branch-Rechte und erledigte Threads sind eigene Bedingungen. Ein grüner
 
 ## Rückblick Teil IV
 
+<div class="fragment" data-fragment-index="1">
+
 Konfiguration: Jobs und Stages legen einen klaren Ablauf fest. Ausführung: Ein passender Runner stellt die nötige Umgebung bereit.
 
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
 Tests: Ein echter Fehler führt zu Exit-Code ungleich `0` und einem roten Job. Ergebnis: Ist der Job `package` grün, liegt das ZIP als Artifact vor.
+
+</div>
 </div></script></section></section></div>
     </div>
 

@@ -1882,15 +1882,11 @@ So registrieren Sie einen Runner:
 
 </div>
 
-<div class="fragment" data-fragment-index="2">
+1. &shy;<!-- .element: class="fragment" data-fragment-index="2" -->Runner in der GitLab-UI oder per API anlegen. 
+1. &shy;<!-- .element: class="fragment" data-fragment-index="3" -->Token kopieren: Es beginnt mit `glrt-`. 
+1. &shy;<!-- .element: class="fragment" data-fragment-index="4" -->Runner auf dem Host mit dem Token registrieren, Executor einstellen. 
 
-1. &shy;<!-- .element: class="fragment" data-fragment-index="1" -->Runner in der GitLab-UI oder per API anlegen. 
-1. &shy;<!-- .element: class="fragment" data-fragment-index="2" -->Token kopieren: Es beginnt mit `glrt-`. 
-1. &shy;<!-- .element: class="fragment" data-fragment-index="3" -->Runner auf dem Host mit dem Token registrieren, Executor einstellen. 
-
-</div>
-
-<div class="fragment" data-fragment-index="3">
+<div class="fragment" data-fragment-index="5">
 
 ```bash
 gitlab-runner register --token "$RUNNER_AUTHENTICATION_TOKEN"
@@ -1991,17 +1987,22 @@ Eine Testmatrix (`parallel:matrix`) macht aus einem Job mehrere. Gibt es zu weni
 ---?
 " data-separator-vertical="?
 --?
-" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="dense drop" template="" -->
 <div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
 
-## Zielbild der Runner-Umgebung
+## Was ein Job auf dem Runner darf
 
-<img src="figs/runner-trust.png" alt="Zielbild: kontrollierter Runner-Zugriff, begrenzter Jobcontainer, Builder, Registry und Logs." style="object-fit: scale-down" class="fragment" data-fragment-index="1">
+<img src="figs/runner-trust.png" alt="Zielbild: kontrollierter Runner-Zugriff, begrenzter Jobcontainer, Builder, Registry und Logs." style="max-height: 300px; object-fit: scale-down" class="fragment" data-fragment-index="1">
 
 
-<div class="fragment" data-fragment-index="2">
+- Über Scope und Tags legt die Runner-Policy fest, welche Jobs der Runner annimmt. <!-- .element: class="fragment" data-fragment-index="2" -->
+- Jeder Job läuft in einem eigenen Container. Den Docker-Socket des Hosts erreicht das Jobskript nicht. <!-- .element: class="fragment" data-fragment-index="3" -->
+- Für die Produktion baut ein Builder ohne Root-Rechte das Image. Im Kurs übernimmt das Docker-in-Docker, mit `privileged`-Rechten. In die Registry schiebt der Job das Image mit dem Job-Token. <!-- .element: class="fragment" data-fragment-index="4" -->
+- Die Job-Logs bleiben in GitLab für Audit und Diagnose. <!-- .element: class="fragment" data-fragment-index="5" -->
 
-Das Bild zeigt, wie eine abgesicherte Runner-Umgebung aufgebaut sein soll. Ihr echter Runner kann anders konfiguriert sein. Jobcode darf alles, was der Runner ihm erlaubt.
+<div class="fragment" data-fragment-index="6">
+
+**Jobcode darf alles, was der Runner ihm erlaubt.**
 
 </div>
 </div></script></section><section data-separator="?

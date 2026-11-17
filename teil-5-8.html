@@ -2584,7 +2584,7 @@ XML des roten Grenzwerttests, gekürzt:
 
 <div class="fragment" data-fragment-index="3">
 
-pytest schreibt das XML im JUnit-Format mit `--junitxml`. GitLab erkennt einen Test in späteren Pipelines an gleichbleibendem `classname` und `name` wieder. **Rot wird der Job durch den Exit-Code von pytest ungleich 0, nicht durch das XML.**
+pytest schreibt das XML im JUnit-Format mit `--junitxml`. GitLab erkennt einen Test in späteren Pipelines an gleichbleibendem `classname` und `name` wieder.
 
 </div>
 
@@ -3113,32 +3113,6 @@ Diese fünf Punkte verlangen wir auch von der eigenen Pipeline. Auto Test stellt
 " data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
 <div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
 
-## Auto Deploy: Voraussetzungen für Kubernetes
-
-<div class="fragment" data-fragment-index="1">
-
-Für ein **Deployment nach Kubernetes** brauchen Sie:
-
-</div>
-
-- &shy;<!-- .element: class="fragment" data-fragment-index="2" -->Zugang zum Cluster und eine abgesprochene Deploymentstrategie, 
-- &shy;<!-- .element: class="fragment" data-fragment-index="3" -->Ingress und Base-Domain mit passendem Wildcard-DNS, 
-- &shy;<!-- .element: class="fragment" data-fragment-index="4" -->einen passenden Runner und klar begrenzte Rechte. 
-
-<div class="fragment" data-fragment-index="5">
-
-Auto DevOps geht auch ohne Kubernetes: Build und Test helfen schon vorher. Für andere Ziele lesen Sie deren eigene Doku.
-
-[GitLab: Auto-DevOps-Voraussetzungen](https://docs.gitlab.com/topics/autodevops/requirements/)
-
-</div>
-</div></script></section><section data-separator="?
----?
-" data-separator-vertical="?
---?
-" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
-<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
-
 ## Auto DevOps: vom grünen Build zum Rollout
 
 <div class="fragment" data-fragment-index="1">
@@ -3154,43 +3128,7 @@ Auto DevOps geht auch ohne Kubernetes: Build und Test helfen schon vorher. Für 
 
 <div class="fragment" data-fragment-index="2">
 
-Für die Produktion braucht es Monitoring, einen Rückfallplan und jemanden, der freigibt. Einen Kubernetes-Rollout machen wir im Seminar nicht.
-
-</div>
-</div></script></section><section data-separator="?
----?
-" data-separator-vertical="?
---?
-" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
-<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
-
-## Auto DevOps: Verfügbarkeit nach Tier
-
-<div class="fragment" data-fragment-index="1">
-
-Auto DevOps selbst ist in **Free, Premium und Ultimate** verfügbar.
-
-</div>
-
-<div class="fragment" data-fragment-index="2">
-
-| Teilfunktion | Tier laut Doku |
-|---|---|
-| SAST-Basis-Scans (statische Codeanalyse) | Alle Tiers (erweiterte Auswertung extra) |
-| Auto DAST (Test der laufenden Anwendung) | Ultimate |
-| Auto Browser-/Load-Performance | Premium, Ultimate |
-
-</div>
-
-<div class="fragment" data-fragment-index="3">
-
-**Prüfen Sie für jede Teilfunktion einzeln, ob Ihr Tier sie enthält und ob sie bei Ihnen läuft.**
-
-</div>
-
-<div class="fragment" data-fragment-index="4">
-
-[GitLab: Auto DevOps und zugehörige Stages](https://docs.gitlab.com/topics/autodevops/stages/)
+Für die Produktion braucht es Monitoring, einen Rückfallplan und jemanden, der freigibt.
 
 </div>
 </div></script></section><section data-separator="?
@@ -3225,53 +3163,36 @@ Bei der Messwertprüfung bleibt es bei der eigenen Pipeline, weil man sie nachvo
 " data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
 <div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
 
-## Nächste Schritte und ihre Prüfung
+## Eigene Pipeline mit GitLab-Vorlagen kombinieren
 
 <div class="fragment" data-fragment-index="1">
 
-Für Ihr eigenes Projekt: Legen Sie für jeden Schritt fest, woran Sie Erfolg und Fehler erkennen. „Grün“ allein sagt zu wenig.
+Die eigene Pipeline bleibt. Die Sicherheitsscans holen Sie als fertige GitLab-Vorlagen dazu:
 
 </div>
 
 <div class="fragment" data-fragment-index="2">
 
-| Nächster Schritt | Bei Erfolg | Bei Fehler |
-|---|---|---|
-| Test für den Wert genau auf der Grenze ergänzen | Grenzwerte werden geprüft | Falsche Entscheidung am Grenzwert fällt auf |
-| Job ergänzen, der das gebaute Paket installiert | Genau das gebaute Paket wird installiert | Job wird rot, wenn das Wheel fehlt |
-| `workflow:rules` schärfen | Richtige Pipeline startet | Doppelte oder fehlende Pipeline fällt auf |
+```yaml
+include:
+  - local: .gitlab/ci/templates.yml
+  - template: Jobs/Secret-Detection.gitlab-ci.yml
+  - template: Jobs/SAST.gitlab-ci.yml
+
+stages: [lint, test, build, image, verify]
+```
 
 </div>
 
 <div class="fragment" data-fragment-index="3">
 
-Jeder Schritt braucht ein klares Ziel, geklärte Rechte und einen sichtbaren Erfolg oder Fehler.
-
-</div>
-</div></script></section><section data-separator="?
----?
-" data-separator-vertical="?
---?
-" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
-<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
-
-## Rückblick Teil V bis VIII
-
-<div class="fragment" data-fragment-index="1">
-
-Die Korrektur der Grenzwertprüfung in `validation.py` hat einen Grund, einen Commit, ein Review und passende automatische Tests.
+In der Messwertprüfung kommen damit zwei Jobs in die Stage `test`: `secret_detection` und `semgrep-sast`. Beide gibt es in GitLab Free. Build, Tests und Smoke-Test bleiben Ihr eigenes YAML.
 
 </div>
 
-<div class="fragment" data-fragment-index="2">
+<div class="fragment" data-fragment-index="4">
 
-Die Pipeline legt fest, wann welche Jobs laufen und was sie brauchen. Sie wissen, welche Variablen ein Job bekommt, welche Dateien er weitergibt und was Runner und Container dürfen.
-
-</div>
-
-<div class="fragment" data-fragment-index="3">
-
-**Sie geben ein Ergebnis weiter und können sagen, was geprüft ist und was nicht.**
+[GitLab: Vorlagen mit include:template einbinden](https://docs.gitlab.com/ci/yaml/#includetemplate)
 
 </div>
 </div></script></section></section><section ><section data-separator="?

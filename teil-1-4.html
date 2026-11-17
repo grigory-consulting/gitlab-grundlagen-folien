@@ -223,10 +223,14 @@ Einen Commit können Sie lokal ohne GitLab anlegen. Issues und Review-Kommentare
 
 ## Weg einer Änderung vom Issue zum Artifact
 
-<img src="figs/entwicklungszyklus.png" alt="Änderung über Issue, Code und Review zum geprüften Artifact; Feedback wird erneut geplant." style="object-fit: scale-down">
+<img src="figs/entwicklungszyklus.png" alt="Änderung über Issue, Code und Review zum geprüften Artifact; Feedback wird erneut geplant." style="object-fit: scale-down" class="fragment" data-fragment-index="1">
 
+
+<div class="fragment" data-fragment-index="2">
 
 Jeder Schritt klärt eine Frage: **Brauchen wir das? Ist es verständlich? Sind die Tests grün? Darf es raus?** Review und Pipeline laufen oft mehrfach.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -469,12 +473,20 @@ Es gibt weitere Rollen und Sonderrechte. Ob eine Aktion erlaubt ist, regeln **Re
 
 ## Commit: Projektstand mit ID und Vorgänger
 
-<img src="figs/git-commit-kette.png" alt="Drei Commits A, B und C; jeder verweist auf seinen Vorgänger." style="object-fit: scale-down">
+<img src="figs/git-commit-kette.png" alt="Drei Commits A, B und C; jeder verweist auf seinen Vorgänger." style="object-fit: scale-down" class="fragment" data-fragment-index="1">
 
+
+<div class="fragment" data-fragment-index="2">
 
 Ein Commit speichert den Stand **aller Dateien, die Git verfolgt**, dazu Autor, Zeit, Nachricht und seinen Vorgänger. Danach ändert er sich nie mehr.
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Aus diesem Inhalt berechnet Git die **Commit-ID**, hier auf sieben Zeichen gekürzt. Gleiche ID auf Ihrem Rechner und in GitLab heißt: gleicher Stand.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -484,12 +496,20 @@ Aus diesem Inhalt berechnet Git die **Commit-ID**, hier auf sieben Zeichen gekü
 
 ## Branch und HEAD als Zeiger
 
-<img src="figs/git-branch-zeiger.png" alt="HEAD zeigt auf main, main auf Commit C; nach dem nächsten Commit zeigt main auf D." style="object-fit: scale-down">
+<img src="figs/git-branch-zeiger.png" alt="HEAD zeigt auf main, main auf Commit C; nach dem nächsten Commit zeigt main auf D." style="object-fit: scale-down" class="fragment" data-fragment-index="1">
 
+
+<div class="fragment" data-fragment-index="2">
 
 Ein Branch ist ein **Name, der auf einen Commit zeigt**, hier `main` auf C. `HEAD` zeigt auf den Branch, mit dem Sie gerade arbeiten.
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Ihr nächster Commit D bekommt C als Vorgänger, und `main` rückt auf D vor. A, B und C bleiben, wie sie sind.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -499,12 +519,20 @@ Ihr nächster Commit D bekommt C als Vorgänger, und `main` rückt auf D vor. A,
 
 ## `origin/main`: Stand von GitLab auf Ihrem Rechner
 
-<img src="figs/git-origin-main.png" alt="Lokal zeigen main und origin/main auf A, in GitLab steht main schon auf C." style="object-fit: scale-down">
+<img src="figs/git-origin-main.png" alt="Lokal zeigen main und origin/main auf A, in GitLab steht main schon auf C." style="object-fit: scale-down" class="fragment" data-fragment-index="1">
 
+
+<div class="fragment" data-fragment-index="2">
 
 `origin/main` ist Ihre **lokale Kopie** des Branches `main` in GitLab. Git aktualisiert sie nur, wenn Sie mit GitLab sprechen: bei `fetch`, `pull` und `push`.
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Im Bild hat jemand B und C nach GitLab gepusht. Ihr Rechner weiß davon nichts, bis Sie den Stand holen.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -514,12 +542,20 @@ Im Bild hat jemand B und C nach GitLab gepusht. Ihr Rechner weiß davon nichts, 
 
 ## Zusammenführen: Fast-forward oder Merge-Commit
 
-<img src="figs/git-zusammenfuehren.png" alt="Links rückt main ohne neuen Commit von A auf C vor. Rechts verbindet der Merge-Commit M die Commits B und C." style="object-fit: scale-down">
+<img src="figs/git-zusammenfuehren.png" alt="Links rückt main ohne neuen Commit von A auf C vor. Rechts verbindet der Merge-Commit M die Commits B und C." style="object-fit: scale-down" class="fragment" data-fragment-index="1">
 
+
+<div class="fragment" data-fragment-index="2">
 
 Hat Ihr Branch keine eigenen neuen Commits, rückt der Name einfach vor: **Fast-forward**. Nur das lässt `git pull --ff-only` zu.
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Haben beide Seiten neue Commits, entsteht ein **Merge-Commit** mit zwei Vorgängern. Ändern beide dieselbe Stelle, gibt es dabei einen Konflikt.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -529,10 +565,14 @@ Haben beide Seiten neue Commits, entsteht ein **Merge-Commit** mit zwei Vorgäng
 
 ## Arbeitszyklus mit Git und GitLab
 
-<img src="figs/git-arbeitszyklus.png" alt="Branch anlegen, ändern, mit add auswählen, mit commit speichern, mit push hochladen, Merge Request in GitLab; danach holt pull den neuen main." style="object-fit: scale-down">
+<img src="figs/git-arbeitszyklus.png" alt="Branch anlegen, ändern, mit add auswählen, mit commit speichern, mit push hochladen, Merge Request in GitLab; danach holt pull den neuen main." style="object-fit: scale-down" class="fragment" data-fragment-index="1">
 
+
+<div class="fragment" data-fragment-index="2">
 
 Jede Änderung geht diesen Weg. Die folgenden Folien zeigen die Befehle dazu einzeln, zuerst `add` und `commit`.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -542,10 +582,14 @@ Jede Änderung geht diesen Weg. Die folgenden Folien zeigen die Befehle dazu ein
 
 ## Working Tree, Index und Commit
 
-<img src="figs/git-bereiche.png" alt="Working Tree, Index und lokale Historie sind vom GitLab-Remote getrennt." style="object-fit: scale-down">
+<img src="outputs/pc-college-powershell-experten-wp5261123/slides/figs/git-bereiche.png" alt="Working Tree, Index und lokale Historie sind vom GitLab-Remote getrennt." style="object-fit: scale-down" class="fragment" data-fragment-index="1">
 
+
+<div class="fragment" data-fragment-index="2">
 
 **Ein Commit speichert nur, was im Index liegt.** Änderungen nur im Working Tree fehlen darin. Bei GitLab ist noch nichts angekommen.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -766,10 +810,14 @@ git fetch origin
 git log --oneline HEAD..origin/main
 ```
 
-<img src="figs/git-fetch-nachher.png" alt="Nach fetch zeigt origin/main lokal auf C, main bleibt auf A." style="object-fit: scale-down">
+<img src="figs/git-fetch-nachher.png" alt="Nach fetch zeigt origin/main lokal auf C, main bleibt auf A." style="object-fit: scale-down" class="fragment" data-fragment-index="1">
 
+
+<div class="fragment" data-fragment-index="2">
 
 `fetch` lädt B und C herunter und setzt `origin/main` auf C. Ihr `main` und Ihre Dateien bleiben auf A. `git log` listet die Commits, die in `origin/main` sind, in `HEAD` aber noch nicht.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -851,10 +899,14 @@ Jede Änderung im Browser ist ein normaler Commit, mit Branch und Review wie lok
 
 ## Issue zur Sortieränderung
 
-<img src="figs/issue-sortierung.png" alt="Issue „Dateiliste nach Namen sortieren“ in GitLab mit Problem, Ziel und Akzeptanzkriterien als Checkliste." style="object-fit: scale-down">
+<img src="figs/issue-sortierung.png" alt="Issue „Dateiliste nach Namen sortieren“ in GitLab mit Problem, Ziel und Akzeptanzkriterien als Checkliste." style="object-fit: scale-down" class="fragment" data-fragment-index="1">
 
+
+<div class="fragment" data-fragment-index="2">
 
 Die Ausgabe war bisher nicht unbedingt falsch sortiert. Neu ist: **Die Reihenfolge ist jetzt festgelegt**.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1004,12 +1056,20 @@ Ein Merge ohne Konflikt heißt nur: Git konnte die Änderungen zusammenführen. 
 
 ## Zwei Branches mit gemeinsamer Vorgeschichte
 
-<img src="figs/git-branches-verzweigt.png" alt="feature/dateiliste zeigt auf B, main auf C; beide bauen auf A auf." style="object-fit: scale-down">
+<img src="figs/git-branches-verzweigt.png" alt="feature/dateiliste zeigt auf B, main auf C; beide bauen auf A auf." style="object-fit: scale-down" class="fragment" data-fragment-index="1">
 
+
+<div class="fragment" data-fragment-index="2">
 
 Erst zeigen beide Namen auf A. Dann committen Sie die Sortierung B, eine Kollegin ergänzt auf `main` die README in C.
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Im Working Tree sehen Sie den ausgecheckten Branch. Ein Branch legt **keinen zweiten Projektordner** an.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1038,10 +1098,14 @@ Damit starten Sie auf dem aktuellen `main`. Während Sie arbeiten, kommen dort n
 
 ## Git Flow
 
-<img src="figs/git-flow.png" alt="Git Flow mit den Spuren main, hotfix, release, develop und feature; Features laufen über develop, Releases und Hotfixes landen auf main." style="object-fit: scale-down">
+<img src="figs/git-flow.png" alt="Git Flow mit den Spuren main, hotfix, release, develop und feature; Features laufen über develop, Releases und Hotfixes landen auf main." style="object-fit: scale-down" class="fragment" data-fragment-index="1">
 
+
+<div class="fragment" data-fragment-index="2">
 
 Git Flow ist eine **Absprache im Team**, keine Git-Funktion. Je mehr Branchtypen, desto mehr muss das Team regeln: Was wird wohin gemergt?
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1051,15 +1115,23 @@ Git Flow ist eine **Absprache im Team**, keine Git-Funktion. Je mehr Branchtypen
 
 ## GitLab Flow
 
-<img src="figs/git-gitlab-flow.png" alt="Feature-Branches kommen per MR nach main; optionale Branches test und production übernehmen Änderungen nur von main aus." style="object-fit: scale-down">
+<img src="figs/git-gitlab-flow.png" alt="Feature-Branches kommen per MR nach main; optionale Branches test und production übernehmen Änderungen nur von main aus." style="object-fit: scale-down" class="fragment" data-fragment-index="1">
 
+
+<div class="fragment" data-fragment-index="2">
 
 Feature-Branches zweigen von `main` ab. Ein Merge Request bündelt Code, Issue, Diskussion und Review.
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Optional kommen weitere Branches hinzu. Für jeden legen Sie fest, was von wo nach wo gemergt wird:
 
-- &shy;<!-- .element: class="fragment" data-fragment-index="1" -->**Environment-Branches:** je ein Branch pro Umgebung (z. B. Test, Produktion). 
-- &shy;<!-- .element: class="fragment" data-fragment-index="2" -->**Release-Branches:** mehrere Produktversionen parallel pflegen.
+</div>
+
+- &shy;<!-- .element: class="fragment" data-fragment-index="4" -->**Environment-Branches:** je ein Branch pro Umgebung (z. B. Test, Produktion). 
+- &shy;<!-- .element: class="fragment" data-fragment-index="5" -->**Release-Branches:** mehrere Produktversionen parallel pflegen.
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1069,16 +1141,32 @@ Optional kommen weitere Branches hinzu. Für jeden legen Sie fest, was von wo na
 
 ## Trunk-Based Development
 
-<img src="figs/git-trunk-based.png" alt="Kurze Branches zweigen von main ab und kommen nach wenigen Commits zurück." style="object-fit: scale-down">
+<img src="figs/git-trunk-based.png" alt="Kurze Branches zweigen von main ab und kommen nach wenigen Commits zurück." style="object-fit: scale-down" class="fragment" data-fragment-index="1">
 
+
+<div class="fragment" data-fragment-index="2">
 
 Alle mergen in einen gemeinsamen Branch, meist `main`. Änderungen bleiben klein, Feature-Branches leben nur kurz und werden schnell zurückgemergt.
 
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
 Dafür braucht es automatische Tests und schnelles Review.
+
+</div>
+
+<div class="fragment" data-fragment-index="4">
 
 Trunk-Based heißt **nicht automatisch: direkt pushen ohne Prüfung**. Eine formale Freigabe passt auch zu kurzen Zyklen.
 
+</div>
+
+<div class="fragment" data-fragment-index="5">
+
 [GitLab: Trunk-based development with short-lived branches](https://about.gitlab.com/topics/version-control/)
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1226,10 +1314,14 @@ git commit -m "merge: integriere aktuellen main"
 
 ## Merge und Rebase im Vergleich
 
-<img src="figs/git-merge-rebase.png" alt="Vorher zweigen B und C von A ab. Nach dem Merge verbindet M die Commits B und C. Nach dem Rebase steht B als neuer Commit B' hinter C, die Historie ist eine gerade Linie." style="object-fit: scale-down">
+<img src="figs/git-merge-rebase.png" alt="Vorher zweigen B und C von A ab. Nach dem Merge verbindet M die Commits B und C. Nach dem Rebase steht B als neuer Commit B' hinter C, die Historie ist eine gerade Linie." style="object-fit: scale-down" class="fragment" data-fragment-index="1">
 
+
+<div class="fragment" data-fragment-index="2">
 
 Merge behält die Historie, Rebase schreibt sie neu. Schon gepushte Commits schreiben Sie nur um, **wenn das Team das abgesprochen hat**. Andere könnten darauf aufbauen.
+
+</div>
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?
@@ -1463,12 +1555,12 @@ Eine Tabelle im README kann festhalten, **wer was prüft**. Das ersetzt kein App
 
 ## Neuer Commit nach dem Review
 
-<img src="figs/git-review-neuer-commit.png" alt="Der Reviewer hat die Commits Sortierung und Test geprüft; ein weiterer Commit kam danach und ist ungeprüft." style="object-fit: scale-down">
+<img src="figs/git-review-neuer-commit.png" alt="Der Reviewer hat die Commits Sortierung und Test geprüft; ein weiterer Commit kam danach und ist ungeprüft." style="object-fit: scale-down" class="fragment" data-fragment-index="1">
 
 
-- &shy;<!-- .element: class="fragment" data-fragment-index="1" -->Der Reviewer prüft die Commits „Sortierung“ und „Test“ und gibt **Approve**. 
-- &shy;<!-- .element: class="fragment" data-fragment-index="2" -->Danach pusht der Autor einen weiteren Commit in denselben Branch. Der MR zeigt ihn sofort mit an. 
-- &shy;<!-- .element: class="fragment" data-fragment-index="3" -->Das Approve gilt nur für den geprüften Stand. Der neue Commit braucht **neues Review** und eine grüne Pipeline.
+- &shy;<!-- .element: class="fragment" data-fragment-index="2" -->Der Reviewer prüft die Commits „Sortierung“ und „Test“ und gibt **Approve**. 
+- &shy;<!-- .element: class="fragment" data-fragment-index="3" -->Danach pusht der Autor einen weiteren Commit in denselben Branch. Der MR zeigt ihn sofort mit an. 
+- &shy;<!-- .element: class="fragment" data-fragment-index="4" -->Das Approve gilt nur für den geprüften Stand. Der neue Commit braucht **neues Review** und eine grüne Pipeline.
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?

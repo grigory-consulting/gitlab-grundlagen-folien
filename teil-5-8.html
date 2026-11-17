@@ -2131,7 +2131,7 @@ def test_report_is_saved_and_read_back(client):
 
 <div class="fragment" data-fragment-index="3">
 
-PostgreSQL startet nicht sofort: Die Anwendung versucht deshalb bis zu 30-mal im Sekundenabstand, die Datenbank zu erreichen. Der Test verlangt den gespeicherten Bericht mit Dateiname und Zählung zurück. **Eine Datenbank, die nur antwortet, reicht nicht.**
+Der Test verlangt den gespeicherten Bericht mit Dateiname und Zählung zurück. **Dass die Datenbank antwortet, genügt nicht: Der Test zeigt, dass die Daten dort ankommen.**
 
 </div>
 </div></script></section><section data-separator="?
@@ -2167,6 +2167,41 @@ Der Integrationstest findet den Fehler am Grenzwert auch. Die Unit-Tests ersetzt
 ---?
 " data-separator-vertical="?
 --?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="dense drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Was eine Container-Registry ist
+
+<div class="fragment" data-fragment-index="1">
+
+Eine Container-Registry ist ein Server, der Container-Images speichert und ausliefert. Ein Image ist das fertige Paket aus Basissystem, Laufzeit und Anwendung, aus dem Docker Container startet.
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
+| Befehl | Richtung | Im Projekt |
+|---|---|---|
+| `docker push` | Image in die Registry hochladen | `build_image` legt das gebaute Image ab |
+| `docker pull` | Image aus der Registry holen | Smoke-Test und Server holen genau dieses Image |
+
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
+Ein Image heißt `<Registry>/<Pfad>:<Tag>`, im Projekt `$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA`. Fremde Images wie `python:3.13-slim` kommen von Docker Hub. Jedes GitLab-Projekt kann eine eigene Registry haben: *Deploy → Container Registry*.
+
+</div>
+
+<div class="fragment" data-fragment-index="4">
+
+**Die Pipeline baut das Image einmal und legt es in der Registry ab. Alles danach holt genau dieses Image von dort.**
+
+</div>
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
 " data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
 <div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
 
@@ -2191,6 +2226,41 @@ Keiner der Wege ist immer der sicherste. Klären Sie für jeden Runner, was er d
 <div class="fragment" data-fragment-index="3">
 
 [GitLab: Docker-Build-Wege und Risiken](https://docs.gitlab.com/ci/docker/using_docker_build/)
+
+</div>
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="dense drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Was Docker-in-Docker bedeutet
+
+<div class="fragment" data-fragment-index="1">
+
+Docker besteht aus zwei Teilen: dem Kommando `docker` und dem Docker-Daemon, der tatsächlich baut. Im Job kommen beide aus zwei Containern:
+
+</div>
+
+<div class="fragment" data-fragment-index="2">
+
+| Container | Image | Enthält | Aufgabe |
+|---|---|---|---|
+| Jobcontainer | `docker:27` | Kommando `docker` | Schickt `build` und `push` an den Daemon |
+| Service | `docker:27-dind` | Docker-Daemon | Baut das Image und lädt es in die Registry |
+
+</div>
+
+<div class="fragment" data-fragment-index="3">
+
+Das Kommando erreicht den Daemon im Jobnetz unter dem Alias `docker`, `DOCKER_TLS_CERTDIR` schaltet dafür TLS ein. Der Daemon gehört nur zu diesem Job und verschwindet mit ihm.
+
+</div>
+
+<div class="fragment" data-fragment-index="4">
+
+Ein Docker-Daemon braucht Kernelfunktionen, die ein normaler Container nicht hat. **Deshalb läuft der dind-Container `privileged` und ist damit kaum noch vom Host abgeschottet.**
 
 </div>
 </div></script></section><section data-separator="?

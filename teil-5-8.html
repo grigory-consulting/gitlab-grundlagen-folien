@@ -814,28 +814,14 @@ Environment-Scope für Gruppenvariablen gibt es nur in Premium/Ultimate. Für Pr
 ---?
 " data-separator-vertical="?
 --?
-" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="dense drop" template="" -->
 <div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
 
 ## Protected Variables
 
 Eine geschützte Variable bekommen nur Pipelines auf geschützten Branches oder Tags.
 
-Ein Featurebranch bekommt sie nicht automatisch. `TRAINING_DUMMY_SECRET` ist `protected`: Auf `main` kommt der Wert an, auf einem ungeschützten Branch bleibt die Variable leer, und `show_variables` gibt nur `Secret    =` aus. Wer aber auf den geschützten Ref pushen darf, kann auch den Code ändern, der den Wert nutzt.
-
-**Der Schutz legt fest, welche Pipelines den Wert bekommen.** Was der Code dann damit macht, prüft er nicht.
-
-[GitLab: Protected Variables](https://docs.gitlab.com/ci/variables/#protect-a-cicd-variable)
-</div></script></section><section data-separator="?
----?
-" data-separator-vertical="?
---?
-" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
-<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
-
-## Protected Variables: dieselbe Zeile, zwei Branches
-
-`show_variables` gibt das Secret aus:
+Ein Featurebranch bekommt sie nicht automatisch. `TRAINING_DUMMY_SECRET` ist `protected`. `show_variables` gibt es aus:
 
 ```yaml
 script:
@@ -847,7 +833,11 @@ script:
 | `main` | ja | `Secret    = [MASKED]` |
 | `test/secret` | nein | `Secret    =` |
 
-Auf `main` ist der Wert da, GitLab zeigt ihn nur maskiert. Auf `test/secret` fehlt er ganz. Der Job läuft trotzdem grün durch, weil eine leere Variable kein Fehler ist.
+Auf `main` kommt der Wert an, GitLab zeigt ihn nur maskiert. Auf dem ungeschützten Branch bleibt die Variable leer; der Job läuft trotzdem grün durch, weil eine leere Variable kein Fehler ist. Wer aber auf den geschützten Ref pushen darf, kann auch den Code ändern, der den Wert nutzt.
+
+**Der Schutz legt fest, welche Pipelines den Wert bekommen.** Was der Code dann damit macht, prüft er nicht.
+
+[GitLab: Protected Variables](https://docs.gitlab.com/ci/variables/#protect-a-cicd-variable)
 </div></script></section><section data-separator="?
 ---?
 " data-separator-vertical="?

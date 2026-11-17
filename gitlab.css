@@ -378,3 +378,6 @@ body:has(.slide-background.has-dark-background.present) .reveal .slide-number { 
 /* Ist/Soll nebeneinander */
 .reveal .ist-soll { display: grid; grid-template-columns: 1fr 1fr; gap: 2em; margin: 0.6em 0; }
 .reveal .ist-soll pre { width: 100%; margin: 0.3em 0 0; }
+
+/* Dichte Folie: kleinere Schrift fuer eine einzelne Folie */
+.reveal .slides section.dense { font-size: 0.76em; }

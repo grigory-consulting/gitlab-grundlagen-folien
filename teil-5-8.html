@@ -1,0 +1,2226 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+    <title>GitLab</title>
+    <link rel="stylesheet" href="dist/reset.css">
+    <link rel="stylesheet" href="dist/reveal.css" />
+    <link rel="stylesheet" href="css/slides-extended.css" />
+    <link rel="stylesheet" href="dist/theme/white.css" id="theme" />
+    <link rel="stylesheet" href="plugin/highlight/zenburn.css" />
+    <link rel="stylesheet" href="plugin/customcontrols/style.css">
+
+
+    <link rel="stylesheet" href="gitlab.css" />
+
+    <script defer src="dist/fontawesome/all.min.js"></script>
+
+    <script type="text/javascript">
+        function pageInIframe() {
+            return (window.location !== window.parent.location);
+        }
+
+        let forgetPop = true;
+        function onPopState(event) {
+            if(forgetPop){
+                forgetPop = false;
+            } else if( pageInIframe()) {
+                parent.postMessage(event.target.location.href, "app://obsidian.md");
+            }
+        }
+        window.onpopstate = onPopState;
+        window.onmessage = event => {
+            if(event.data == "reload"){
+                window.document.location.reload();
+            }
+            forgetPop = true;
+        }
+
+        function fitElements() {
+            const itemsToFit = document.getElementsByClassName('fitText');
+            for (const item in itemsToFit) {
+                if (Object.hasOwnProperty.call(itemsToFit, item)) {
+                    const element = itemsToFit[item];
+                    fitElement(element, 1, 1000);
+                    element.classList.remove('fitText');
+                }
+            }
+        }
+
+        function fitElement(element, start, end) {
+
+            let size = (end + start) / 2;
+            element.style.fontSize = `${size}px`;
+
+            if (Math.abs(start - end) < 1) {
+                while (element.scrollHeight > element.offsetHeight) {
+                    size--;
+                    element.style.fontSize = `${size}px`;
+                }
+                return;
+            }
+
+            if (element.scrollHeight > element.offsetHeight) {
+                fitElement(element, start, size);
+            } else {
+                fitElement(element, size, end);
+            }
+        }
+
+        document.onreadystatechange = () => {
+            fitElements();
+            if (document.readyState === 'complete') {
+                if (pageInIframe() && window.location.href.indexOf("?export") != -1){
+                    parent.postMessage(event.target.location.href, "app://obsidian.md");
+                }
+                if (window.location.href.indexOf("print-pdf") != -1){
+                    let stateCheck = setInterval(() => {
+                        clearInterval(stateCheck);
+                        window.print();
+                    }, 250);
+                }
+            }
+        };
+    </script>
+</head>
+
+<body>
+    <div class="reveal">
+        <div class="slides"><section ><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" data-background-color="#183b66" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+# Teil V · Pipeline-Steuerung
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Lernziele Teil V
+
+Für eine Änderung können Sie drei Fragen beantworten:
+
+- &shy;<!-- .element: class="fragment" data-fragment-index="1" -->Was startet eine Pipeline? 
+- &shy;<!-- .element: class="fragment" data-fragment-index="2" -->Welche Prüfungen laufen in dieser Pipeline? 
+- &shy;<!-- .element: class="fragment" data-fragment-index="3" -->Auf welche Jobs und Dateien wartet ein Job? 
+
+<div class="fragment" data-fragment-index="4">
+
+Der Weg: zuerst der Aufbau der Datei, dann `needs`, `workflow` und `rules`, zum Schluss `include` und `extends` im Detail.
+
+</div>
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Drei Fragen zu einem Commit
+
+Beispiel: Ein Commit im Featurebranch korrigiert die Grenzwertprüfung zu `lower <= value <= upper`.
+
+| Frage | Beispiel | Wer entscheidet |
+|---|---|---|
+| Startet eine Pipeline? | Push bei offenem MR | `workflow:rules` |
+| Läuft der Job mit? | `build_image` fehlt auf einem Featurebranch | Job-`rules` |
+| Wann kann der Job starten? | `build_wheel` wartet auf `lint` und `unit_tests` | `stage`, `needs` |
+
+Keine Pipeline, ein fehlender Job, ein wartender Job: Das sind **drei verschiedene Ursachen**.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Aufbau der Hauptdatei `.gitlab-ci.yml`
+
+Ausschnitt aus dem Projekt:
+
+```yaml
+workflow:
+  rules: …
+
+include:
+  - local: .gitlab/ci/templates.yml
+
+stages: [lint, test, build, image, verify]
+
+lint:
+  stage: lint
+  …
+```
+
+Die Hauptdatei legt die Stages fest und enthält die Jobs. `include` bindet eine zweite Datei ein: die Vorlage mit Image, Installation und Cache für alle Python-Jobs. Ob überhaupt eine Pipeline entsteht, entscheiden die `workflow:rules` am Dateianfang.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Welche Datei legt was fest?
+
+| Datei | Was sie festlegt |
+|---|---|
+| `.gitlab-ci.yml` | Wann läuft welcher Job? In welchem Image, mit welchen Variablen? |
+| `tests/unit/` | Welche Fälle? Was gilt als richtig? |
+| `pyproject.toml` | Welche Dateien kommen ins Wheel? Welche Optionen bekommt pytest? |
+| `requirements-dev.txt` | Welche Werkzeuge in welcher Version? |
+
+Wer einen Test unter `tests/unit/` ändert, ändert die Prüfung der Pipeline, auch wenn das YAML gleich bleibt.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## YAML-Quoting
+
+```yaml
+# YAML-Ausschnitt: Der Doppelpunkt gehört zum String.
+script:
+  - 'echo "Status: bereit"'
+```
+
+Die äußeren Anführungszeichen sind für YAML. Ohne sie liest YAML `Status: bereit` als Schlüssel mit Wert, und die Konfiguration ist ungültig. Danach liest die Shell den Befehl noch einmal selbst.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## `after_script`: eigene Shell
+
+```yaml
+# Beispiel
+job:
+  script:
+    - export STAND=fertig
+  after_script:
+    - echo "STAND = $STAND"    # gibt "STAND = " aus
+```
+
+`before_script` und `script` laufen in derselben Shell, `after_script` in einer **eigenen Shell**. Variablen, die `script` setzt, kennt `after_script` deshalb nicht.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Stages legen fest, wer wartet
+
+In der Stage `test` sind drei Jobs definiert. Der Job `build_wheel` in der Stage `build` braucht nur einen davon:
+
+| Job | Braucht `build_wheel` den Job? |
+|---|---|
+| `unit_tests` | Ja: Die Unit-Tests müssen grün sein |
+| `integration_tests` | Nein, darauf wartet erst `build_image` |
+| `scenarios` | Nein |
+
+Ohne `needs` wartet jede Stage auf die vorherige. Mit `needs` nennt ein Job die Jobs, auf die er wartet: Sie streichen so nur **unnötige** Wartezeiten, alle Tests laufen weiter.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## DAG: Kanten zwischen Jobs
+
+<img src="figs/pipeline-dag.png" alt="DAG der Messwertprüfung: lint und unit_tests vor build_wheel; build_wheel vor install_check; build_wheel und integration_tests vor build_image; build_image vor container_smoke; scenarios liegt außerhalb dieses Pfads." style="object-fit: scale-down">
+
+
+Der DAG (gerichteter Graph) zeigt die `needs`-Kanten der Messwertprüfung. **Ein Pfeil heißt: muss vorher fertig sein.**
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## `needs` im Job `build_wheel`
+
+Ausschnitt aus `build_wheel`:
+
+```yaml
+build_wheel:
+  stage: build
+  extends: .python
+  needs: [lint, unit_tests]
+  script:
+    - python -m build --wheel
+    - ls -l dist/
+  artifacts:
+    paths: [dist/]
+```
+
+Der Job startet, sobald `lint` und `unit_tests` fertig sind, ohne auf die übrigen Tests zu warten. In dieser kurzen Schreibweise wartet `needs` auf die genannten Jobs **und** lädt ihre Artifacts. Wer nur warten will, nutzt die lange Schreibweise mit `job:` und `artifacts: false`.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## `needs` im Job `install_check`
+
+Ausschnitt aus `install_check`:
+
+```yaml
+install_check:
+  stage: build
+  image: python:3.13-slim
+  needs:
+    - job: build_wheel
+      artifacts: true
+  script:
+    - python -m venv /tmp/fresh
+    - /tmp/fresh/bin/pip install -q -r requirements.txt
+    - /tmp/fresh/bin/pip install --no-deps dist/*.whl
+```
+
+Der Job liegt in derselben Stage `build` wie `build_wheel`. Ohne `needs` starten beide gleichzeitig, und `dist/` fehlt. Mit `needs` wartet er genau auf `build_wheel`, nicht auf eine ganze Stage. `artifacts: true` ist der Standard und hier nur ausgeschrieben.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## `needs` mit `artifacts: true`: Wheel übernehmen
+
+Ausschnitt aus `install_check`, gekürzt:
+
+```yaml
+install_check:
+  needs:
+    - job: build_wheel
+      artifacts: true
+  script:
+    - /tmp/fresh/bin/pip install --no-deps dist/*.whl
+    - cd /tmp && /tmp/fresh/bin/python -c "import messwert.app; print('INSTALL_OK')"
+```
+
+`build_wheel` legt das Wheel vorher unter `dist/` ab. Im Log von `install_check` steht zuerst `Downloading artifacts for build_wheel`, am Ende `INSTALL_OK`. Mit `artifacts: false` würde der Job weiter auf `build_wheel` warten, das Wheel aber **nicht herunterladen**.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## `dependencies`
+
+Alternative im Stage-Modell, also ohne `needs`. `install_check` liegt dafür in der späteren Stage `verify`:
+
+```yaml
+install_check:
+  stage: verify
+  image: python:3.13-slim
+  dependencies: [build_wheel]
+  script:
+    - python -m venv /tmp/fresh
+    - /tmp/fresh/bin/pip install --no-deps dist/*.whl
+```
+
+Der Job wartet auf alle Jobs der früheren Stages und lädt nur die Artifacts von `build_wheel`. Die Jobs, deren Artifacts er lädt, müssen in früheren Stages liegen. **Verwenden Sie `needs` und `dependencies` nie im selben Job.**
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Stage-Modell, `needs` oder `dependencies`?
+
+| Sie wollen … | Dann nutzen Sie |
+|---|---|
+| Auf alle Jobs einer früheren Stage warten | Stage-Modell |
+| Nur auf bestimmte Jobs warten | `needs` |
+| Im Stage-Modell nur die Artifacts bestimmter Jobs laden | `dependencies` |
+| Nur auf bestimmte Jobs warten und ihre Artifacts laden | `needs` mit `artifacts: true` |
+
+Ohne `needs` oder eingeschränkte `dependencies` lädt ein Job standardmäßig die Artifacts aller früheren Stages. Verlassen Sie sich nicht auf Dateien, die nur zufällig da sind.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## `needs: optional`
+
+Beispiel: Ein Doku-Check `docs` läuft nur in manchen Pipelines.
+
+```yaml
+build_wheel:
+  needs:
+    - job: unit_tests
+    - job: docs
+      optional: true
+```
+
+Fehlt `docs` in der Pipeline, wartet `build_wheel` nur auf `unit_tests`. Läuft `docs` mit, wartet `build_wheel` auch darauf. `optional` gilt nur für Jobs, die fehlen: Schlägt `docs` fehl, startet `build_wheel` nicht.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Auslöser einer Pipeline und `CI_PIPELINE_SOURCE`
+
+| Auslöser | `CI_PIPELINE_SOURCE` | Genauer unterscheiden mit |
+|---|---|---|
+| Branch-Push | `push` | `CI_COMMIT_BRANCH` |
+| Tag-Push | `push` | `CI_COMMIT_TAG` |
+| MR-Ereignis | `merge_request_event` | `CI_MERGE_REQUEST_…`-Variablen |
+| Zeitplan | `schedule` | `CI_COMMIT_BRANCH` oder `CI_COMMIT_TAG` |
+| Start über die Oberfläche | `web` | `CI_COMMIT_BRANCH` oder `CI_COMMIT_TAG` |
+
+`push` heißt nicht automatisch „Branch“: Auch ein Tag-Push meldet `push`. GitLab setzt diese Variablen selbst und wertet sie aus, bevor ein Job startet. Was ein Skript später setzt, ändert nichts daran, welche Pipeline und welche Jobs entstehen.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## `workflow:rules` im Projekt
+
+GitLab prüft die `workflow:rules` des Projekts von oben nach unten, die erste passende Regel entscheidet:
+
+```yaml
+workflow:
+  rules:
+    - if: $CI_COMMIT_TAG
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+      when: never
+    - if: $CI_COMMIT_BRANCH
+```
+
+Bei offenem MR ist `CI_OPEN_MERGE_REQUESTS` gefüllt: Ein Push startet dann **keine zweite Branch-Pipeline**. Die MR-Regel steht vor der `never`-Regel, deshalb entsteht die MR-Pipeline trotzdem. Die `never`-Regel fragt nicht nach dem Auslöser: Sie gilt für jede Branch-Pipeline, solange ein MR offen ist.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## `workflow:rules`: Falltabelle
+
+So entscheiden die `workflow:rules` des Projekts:
+
+| Ereignis | Welche Pipeline entsteht |
+|---|---|
+| Push auf `main` | Branch-Pipeline mit allen Jobs |
+| Branch-Push ohne MR | Branch-Pipeline ohne `build_image` und `container_smoke` |
+| MR öffnen | MR-Pipeline |
+| Push bei offenem MR | Nur die MR-Pipeline, keine zweite Branch-Pipeline |
+| Tag-Push `v1.0.0` | Tag-Pipeline mit allen Jobs |
+| Zeitplan, Branch ohne MR | Branch-Pipeline (letzte Regel) |
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Job-`rules`: Reihenfolge der Auswertung
+
+`workflow:rules` entscheiden nur, ob eine Pipeline entsteht. Welche Jobs darin laufen, legen die Job-`rules` fest. Auch dort entscheidet die erste passende Regel:
+
+```yaml
+build_image:
+  stage: image
+  needs: [build_wheel, integration_tests]
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_TAG
+  script:
+    - docker push "$IMAGE"
+```
+
+Auf `main` passt die erste Regel, bei einem Tag die zweite. Auf einem Featurebranch passt keine Regel: **Der Job fehlt**, obwohl die Pipeline laufen darf. Mit ihm fehlt `container_smoke`: Der Job hat dieselben `rules`.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## `rules:changes`
+
+Beispiel: Unit-Tests laufen im MR nur, wenn passende Dateien geändert sind:
+
+```yaml
+unit_tests:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        - "src/**/*"
+        - "tests/**/*"
+        - "requirements*.txt"
+        - "pyproject.toml"
+  script:
+    - pytest tests/unit
+```
+
+Im MR vergleicht GitLab mit dem Zielbranch. `if` **und** `changes` müssen passen: Ändert der MR eine Datei unter `src/`, läuft der Job. Ändert er nur die README, fehlt der Job in der Pipeline.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## `rules:changes`: die übrigen Pipelines
+
+Mit nur dieser einen Regel fehlt `unit_tests` in jeder Branch- und Tag-Pipeline. Eine zweite Regel holt den Job dorthin zurück:
+
+```yaml
+unit_tests:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes: ["src/**/*", "tests/**/*", "requirements*.txt", "pyproject.toml"]
+    - if: $CI_PIPELINE_SOURCE != "merge_request_event"
+```
+
+Im MR kann der Job weiterhin fehlen. `build_wheel` verlangt ihn per `needs`: Dort müsste `unit_tests` dann als `optional` stehen.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Nebenwirkungen von `rules`
+
+| Änderung | Mögliche Folge |
+|---|---|
+| `unit_tests` läuft wegen einer Regel nicht mit | `build_wheel` verlangt per `needs` einen Job, der fehlt: Die Pipeline entsteht nicht |
+| Regel für MR-Pipelines fragt nur `CI_COMMIT_BRANCH` ab | Job fehlt in der MR-Pipeline: Dort ist `CI_COMMIT_BRANCH` leer |
+| `changes` ohne passende `if`-Bedingung verwenden | Bei neuen Branches und Pipelines ohne Push gilt `changes` immer als erfüllt: Der Job läuft mit |
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## `when: always` als Schlussregel
+
+```yaml
+# Gegenbeispiel: Projekt ohne workflow:rules
+unit_tests:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - when: always
+  script:
+    - pytest tests/unit
+```
+
+Die erste Regel lässt MR-Pipelines entstehen, die letzte nimmt den Job in **jede** Pipeline auf. Ohne `workflow:rules` startet ein Push bei offenem MR deshalb zwei Pipelines, eine für den Branch und eine für den MR: `unit_tests` läuft **doppelt**. Im Projekt verhindert das die `never`-Regel in den `workflow:rules`.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## `when: manual` und `allow_failure: false`
+
+Ein manueller Freigabe-Job (noch kein echtes Deployment):
+
+```yaml
+approve:
+  script: echo "Freigabe dokumentiert"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      when: manual
+      allow_failure: false
+```
+
+`when: manual`: Der Job startet erst per Klick. Mit `allow_failure: false` hält die Pipeline an, bis jemand ihn startet. Eine echte Freigabe braucht klare Rechte und etwas Konkretes, das freigegeben wird. Das `echo` gibt nichts frei.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## `include`
+
+```yaml
+include:
+  - local: .gitlab/ci/templates.yml
+```
+
+Die Pipeline entsteht aus **allen eingebundenen Dateien zusammen**. Wer nur die Hauptdatei reviewt, übersieht Änderungen an Image, Installation oder Cache-Key in `.gitlab/ci/templates.yml`.
+
+Binden Sie Vorlagen aus anderen Projekten ein, prüfen Sie auch, welche Version eingebunden wird.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## `extends`: gemeinsame Jobvorlage
+
+Gekürzter Ausschnitt aus `.gitlab/ci/templates.yml` und `.gitlab-ci.yml`:
+
+```yaml
+.python:
+  image: python:3.13-slim
+  before_script:
+    - pip install -r requirements-dev.txt
+
+lint:
+  stage: lint
+  extends: .python
+  script:
+    - ruff check .
+    - ruff format --check .
+```
+
+Ein Punkt am Namensanfang heißt: Vorlage, kein eigener Job. `lint` holt sich daraus Image und Installation. Im Pipeline-Editor zeigt **Full configuration**, was GitLab daraus zusammensetzt.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## `before_script` in der Vorlage `.python`
+
+Ausschnitt: Vorlage für alle Python-Jobs und der Job, der sie nicht nutzt:
+
+```yaml
+.python:
+  image: python:3.13-slim
+  before_script:
+    - pip install -r requirements-dev.txt
+install_check:
+  image: python:3.13-slim
+  script:
+    - python -m venv /tmp/fresh
+    - /tmp/fresh/bin/pip install -q -r requirements.txt
+```
+
+Ein Job mit `extends: .python` installiert vor `script` die Werkzeuge aus `requirements-dev.txt`, also `ruff` und `pytest`. `install_check` übernimmt die Vorlage **bewusst nicht**: Er prüft das Wheel in einer frischen Umgebung, nur mit den Laufzeitpaketen.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## `extends`: Was passiert mit Listen?
+
+```yaml
+.base:
+  script: [echo Basis]
+
+test:
+  extends: .base
+  script: [echo Test]
+```
+
+Es läuft nur **`echo Test`**, nicht vorher `echo Basis`. Verschachtelte Schlüssel wie `variables` führt GitLab Eintrag für Eintrag zusammen, aber eine neue `script`-Liste ersetzt die geerbte.
+
+Listen hängt GitLab nicht aneinander. Gemeinsame Schritte gehören deshalb in `before_script` oder in eine Skriptdatei.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Fehlersuche: Pipeline und Jobs
+
+| Symptom | Zuerst prüfen |
+|---|---|
+| Keine Pipeline | Workflow und tatsächlichen Auslöser |
+| Erwarteter Job fehlt | Erste passende Job-Regel |
+| Pipeline meldet Konfigurationsfehler, kein Job startet | `needs` auf fehlenden Job |
+| Job wartet | Vorgänger, Runner-Zuordnung, freie Runner |
+| Job ist rot | Job-Log: wo das Skript abbricht |
+
+CI Lint und das zusammengeführte YAML (**Full configuration** im Pipeline-Editor) zeigen, ob die Konfiguration stimmt. Ob die Werkzeuge da sind und der Job auf dem Runner durchläuft, zeigen sie nicht.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Rückblick Teil V
+
+**Pipeline ja/nein → welche Jobs → worauf warten sie**: drei getrennte Fragen.
+
+Bei offenem MR testet genau eine Pipeline die Korrektur der Grenzwertprüfung: die MR-Pipeline. `build_wheel` wartet nur auf `lint` und `unit_tests`. Vorlagen helfen, solange das zusammengeführte YAML lesbar bleibt.
+
+Als Nächstes: welche Variablen ein Job bekommt und wie Jobs Dateien weitergeben.
+</div></script></section></section><section ><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" data-background-color="#183b66" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+# Teil VI · Secrets und Pipeline-Daten
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Lernziele Teil VI
+
+Sie können:
+
+- &shy;<!-- .element: class="fragment" data-fragment-index="1" -->erklären, welchen Wert eine Variable im Job wirklich hat, 
+- &shy;<!-- .element: class="fragment" data-fragment-index="2" -->Zugriff auf Secrets und Maskierung im Log unterscheiden, 
+- &shy;<!-- .element: class="fragment" data-fragment-index="3" -->Cache und Artifacts unterscheiden und getrennt einsetzen. 
+
+<div class="fragment" data-fragment-index="4">
+
+Dafür nutzt das Projekt die Variable `APP_TITLE`, ein Dummy-Secret, einen pip-Cache und das Wheel, das ein zweiter Job in frischer Umgebung installiert.
+
+</div>
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Vordefinierte Variablen: Pipeline-Quelle, Ref und Commit
+
+Im GitLab-Job:
+
+```bash
+echo "$CI_PIPELINE_SOURCE"
+echo "$CI_COMMIT_REF_NAME"
+echo "$CI_COMMIT_SHORT_SHA"
+```
+
+Beispielausgabe in der MR-Pipeline des Branches `doku/hinweis`:
+
+```text
+merge_request_event
+doku/hinweis
+<die ersten 8 Zeichen des Commits>
+```
+
+Diese drei Werte zeigen, welchen Stand der Job geprüft hat. Auf Ihrem Rechner gibt es diese Variablen nicht. Geben Sie zur Diagnose nicht alle Umgebungsvariablen aus: Darunter können Secrets sein.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## `variables` global und im Job
+
+```yaml
+variables:
+  APP_TITLE: "Messwertprüfung (aus .gitlab-ci.yml)"
+
+show_variables:
+  image: alpine:3.20
+  when: manual
+  variables:
+    APP_TITLE: "Messwertprüfung (aus dem Job)"
+  script:
+    - echo "APP_TITLE = $APP_TITLE"
+```
+
+Die Variable im Job überschreibt die globale: Der Job gibt **`APP_TITLE = Messwertprüfung (aus dem Job)`** aus. `APP_TITLE` ist ein harmloser Anzeigetext, kein Secret.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Rangfolge: Projektvariable vor YAML
+
+`APP_TITLE` ist an bis zu drei Stellen definiert. Der Job gibt aus:
+
+| `APP_TITLE` ist definiert … | Ausgabe im Job |
+|---|---|
+| nur global im YAML | `Messwertprüfung (aus .gitlab-ci.yml)` |
+| zusätzlich im Job | `Messwertprüfung (aus dem Job)` |
+| zusätzlich in den Projekteinstellungen | `Messwertprüfung (aus Projekteinstellung)` |
+
+Die Projektvariable aus **Settings › CI/CD › Variables** überschreibt beide YAML-Werte. Die Tabelle zeigt nur diese drei Fälle. Gruppen-, Instanz- und Pipeline-Variablen haben eigene Plätze in der Rangfolge:
+
+[GitLab: welche Variable gewinnt](https://docs.gitlab.com/ci/variables/#cicd-variable-precedence)
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Variablen in Projekt, Gruppe, Instanz
+
+| Angelegt in | Gilt für | Geeignet für |
+|---|---|---|
+| Projekt | Dieses Projekt | Wert, den nur dieses Projekt braucht |
+| Gruppe | Alle Projekte der Gruppe | Wert, den mehrere Projekte teilen |
+| Instanz | Alle Projekte und Gruppen | Zentrale Einstellung der Admins |
+
+Projekte erben Gruppenwerte. Ein Secret in der Gruppe bekommen deshalb alle ihre Projekte, auch die, die es nicht brauchen. Je höher die Ebene (Gruppe, Instanz), desto mehr Projekte trifft ein Fehler.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Environment-Scope und `protected`
+
+```yaml
+# Environment: benanntes Deploymentziel in GitLab. Hier nur benannt, kein Deploy.
+deploy_preview:
+  environment:
+    name: review/doku-hinweis
+  script: echo "Umgebung benannt"
+```
+
+Eine Variable mit dem Scope `review/*` bekommt nur ein Job, dessen `environment`-Name auf dieses Muster passt, hier `review/doku-hinweis`. `protected` ist etwas anderes: Es richtet sich nach geschützten **Branches oder Tags**. Den Scope legen Sie beim Anlegen der Variable fest.
+
+Environment-Scope für Gruppenvariablen gibt es nur in Premium/Ultimate. Für Projektvariablen gibt es ihn in allen Tiers.
+
+[GitLab: Gruppenvariablen und Environment-Scope](https://docs.gitlab.com/ci/variables/#for-a-group)
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Protected Variables
+
+Eine geschützte Variable bekommen nur Pipelines auf geschützten Branches oder Tags.
+
+Ein Featurebranch bekommt sie nicht automatisch. `TRAINING_DUMMY_SECRET` ist `protected`: Auf `main` kommt der Wert an, auf einem ungeschützten Branch bleibt die Variable leer, und `show_variables` gibt nur `Secret    =` aus. Wer aber auf den geschützten Ref pushen darf, kann auch den Code ändern, der den Wert nutzt.
+
+**Der Schutz legt fest, welche Pipelines den Wert bekommen.** Was der Code dann damit macht, prüft er nicht.
+
+[GitLab: Protected Variables](https://docs.gitlab.com/ci/variables/#protect-a-cicd-variable)
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Bekommt der Job die Variable?
+
+Prüfen Sie zuerst, ob der Job den Wert überhaupt bekommt, dann, welcher Wert gewinnt. Eine Projektvariable kann Vorrang haben und für diesen Job trotzdem nicht gelten.
+
+| Prüfung | Beispiel |
+|---|---|
+| Richtiges Projekt, richtige Gruppe? | Variable ist in diesem Projekt oder seiner Gruppe angelegt |
+| Passendes Environment? | Variable hat den Scope `review/*`: nur für Jobs mit passendem `environment` |
+| Läuft der Job auf geschütztem Ref? | Variable ist `protected`: nur auf geschützten Branches und Tags |
+| Danach: Welcher Wert gewinnt? | Die Projektvariable überschreibt den Wert aus dem YAML |
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Geschützte Variablen und Runner in MR-Pipelines
+
+Damit eine MR-Pipeline geschützte Variablen und Runner bekommt, muss gelten:
+
+- &shy;<!-- .element: class="fragment" data-fragment-index="1" -->Quell- **und** Zielbranch sind geschützt und liegen im selben Projekt. 
+- &shy;<!-- .element: class="fragment" data-fragment-index="2" -->Wer die Pipeline startet, darf auf den Zielbranch pushen oder mergen. 
+- &shy;<!-- .element: class="fragment" data-fragment-index="3" -->Die Option **Allow merge request pipelines to access protected variables and runners** ist im Projekt eingeschaltet. 
+
+<div class="fragment" data-fragment-index="4">
+
+MRs aus Forks bekommen diese Variablen und Runner so nicht. Lesen Sie fremden Pipelinecode, bevor er im Zielprojekt läuft.
+
+[GitLab: Protected Resources in MR-Pipelines](https://docs.gitlab.com/ci/pipelines/merge_request_pipelines/#control-access-to-protected-variables-and-runners)
+
+</div>
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Maskierung im Job-Log
+
+Gibt ein Job den exakten Wert einer maskierten Variable aus, steht im Log `[MASKED]`, auf `main` etwa `Secret    = [MASKED]`. Schickt er den Wert verändert (z. B. Base64-kodiert) oder auf anderem Weg hinaus, hilft die Maskierung nicht.
+
+Gegen bösartigen Jobcode hilft Maskierung nicht: Er kann jeden Wert lesen, den der Job bekommt, egal was im Log steht.
+
+Deshalb braucht jede Änderung an YAML, eingebundenen Dateien und Skripten ein Review, auch bei maskierten und geschützten Werten, besonders bei fremden Pipelines.
+
+[GitLab: Variablensicherheit und Maskierung](https://docs.gitlab.com/ci/variables/#cicd-variable-security)
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## `masked`, `hidden`, `protected`
+
+| Einstellung | Frage | Schützt nicht vor … |
+|---|---|---|
+| `masked` | Wird der Wert im Log ersetzt? | Code, der den Wert verändert ausgibt oder verschickt |
+| `hidden` | Zeigt die UI den Wert nach dem Speichern noch an? | Lesen im Job |
+| `protected` | Bekommt dieser Ref den Wert? | Unsicherem Pipelinecode |
+
+Echte Secrets brauchen zusätzlich minimale Rechte, kurze Laufzeit, Rotation und Kontrolle darüber, welcher Code läuft.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## File-Variablen
+
+Eine Variable vom Typ **File** legen Sie in den Projekteinstellungen an. GitLab schreibt ihren Inhalt für den Job in eine temporäre Datei:
+
+| Bestandteil | Dummy-Beispiel |
+|---|---|
+| Name in den Projekteinstellungen | `TRAINING_FILE` |
+| Gespeicherter Inhalt | Zwei fiktive Zeilen: `FIKTIVE_KURSDATEI`, `Zeile 2` |
+| Wert der Variable im Job | Pfad zu einer temporären Datei, z. B. `/builds/schulung/messwert-tnXX.tmp/TRAINING_FILE` |
+
+Ein Werkzeug bekommt also einen **Dateipfad**, nicht den Inhalt. Eine normale YAML-Variable wird durch Name oder Endung nicht zur File-Variable.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## File-Variable im Job lesen
+
+Ausschnitt aus `show_variables`:
+
+```yaml
+show_variables:
+  script:
+    - echo "Secret    = $TRAINING_DUMMY_SECRET"
+    - echo "TRAINING_FILE = $TRAINING_FILE"
+    - cat "$TRAINING_FILE"
+```
+
+`echo` zeigt den Pfad, erst `cat` liest den Inhalt. Liegt in der Datei später ein echtes Zertifikat, prüft `cat` nicht, ob es gültig ist oder die Anmeldung klappt.
+
+Secret-Dateien gehören nicht in Cache, Wheel oder Diagnose-Artifacts.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Ausgabe von `show_variables`
+
+Auf `main`, mit Secret und File-Variable, ohne Projektvariable `APP_TITLE`:
+
+```text
+APP_TITLE = Messwertprüfung (aus dem Job)
+Secret    = [MASKED]
+TRAINING_FILE = /builds/schulung/messwert-tnXX.tmp/TRAINING_FILE
+FIKTIVE_KURSDATEI
+Zeile 2
+```
+
+Auf einem ungeschützten Branch bleibt nur die Secret-Zeile leer. Um zu prüfen, ob das Secret ankommt, brauchen Sie den echten Wert nicht zu sehen.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Externe Secret-Manager
+
+| CI-Variable | Externer Secret-Manager |
+|---|---|
+| GitLab gibt dem Job den gespeicherten Wert | Job holt sich einen bestimmten Wert ab |
+| GitLab-Einstellungen regeln, wer ihn bekommt | Der Secret-Manager prüft zusätzlich, welcher Job fragt und was er lesen darf |
+| Schutz und Review bleiben nötig | Schutz und Review bleiben nötig |
+
+Die eingebauten GitLab-Integrationen gibt es nur in **Premium/Ultimate**. Mit einem ID-Token, das GitLab ausstellt, weist sich ein Job beim Secret-Manager aus. Die Policy dort müssen Sie trotzdem eng fassen.
+
+[GitLab: External Secrets](https://docs.gitlab.com/ci/secrets/)
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Cache und Artifacts im Vergleich
+
+<img src="figs/cache-artifacts.png" alt="Artifacts übergeben Jobausgaben; Cache ermöglicht die optionale Wiederverwendung von pip-Paketen." style="object-fit: scale-down">
+
+
+**Der Cache darf fehlen.** Das Wheel muss dagegen als Artifact aus dem Job `build_wheel` kommen.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## `.cache/pip` als Cache, `dist/` als Artifact
+
+Im Projekt installiert jeder Job mit `extends: .python` die festgeschriebenen Versionen aus `requirements-dev.txt`.
+
+| Ordner | Verwendung | Zweck |
+|---|---|---|
+| `.cache/pip` | Cache aller `.python`-Jobs | Downloads aus einem früheren Lauf wiederverwenden |
+| `dist/` | Artifact von `build_wheel` | Wheel an spätere Jobs weitergeben |
+
+Findet ein Job keinen Cache, lädt `pip` dieselben Versionen neu herunter. Das Wheel bekommen spätere Jobs nur über das Artifact, egal ob es einen Cache gab.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Cache-Key aus der Abhängigkeitsdatei
+
+```yaml
+.python:
+  variables:
+    PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  cache:
+    key:
+      files: [requirements-dev.txt]
+    paths: [.cache/pip]
+```
+
+`requirements-dev.txt` legt die Werkzeuge fest, z. B. `pytest==9.2.0`. Der Key benennt den Cache: Ändert ein Commit diese Datei, entsteht ein neuer, leerer Cache. Auf geschützten Branches hängt GitLab `-protected` an: `main` und Featurebranches teilen sich keinen Cache.
+
+GitLab cacht nur Pfade im Projektordner, deshalb zeigt `PIP_CACHE_DIR` dorthin. Die Python-Version steckt nicht im Key: Nach einem Imagewechsel gilt derselbe Cache weiter.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Cache-Policy: `pull`, `push`, `pull-push`
+
+| Policy | Vorhandenen Cache lesen | Eigenen Cache hochladen |
+|---|---|---|
+| `pull` | Ja | Nein |
+| `push` | Nein | Ja |
+| `pull-push` | Ja | Ja |
+
+Standard ist `pull-push`. Schreiben mehrere Jobs parallel in denselben Key, können sie sich gegenseitig stören. Einfacher zu durchschauen: Ein Job schreibt, die anderen lesen nur.
+
+Dass die Pipeline dadurch schneller wird, ist nicht garantiert.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Cache-Miss: Treffer oder nicht
+
+| Situation | Was es bedeutet |
+|---|---|
+| `Successfully extracted cache` | Treffer, `pip` lädt nichts herunter |
+| `Cache file does not exist` | Kein Treffer (Cache-Miss), `pip` lädt neu: nur langsamer, alles in Ordnung |
+| Pakete schon im Image enthalten | Kein Cache nötig: Das Image legt die Versionen fest |
+| Andere Version im Cache | Unkritisch: `pip` installiert die Version aus `requirements-dev.txt` |
+| Anderer Runner findet lokalen Cache nicht | Prüfen, wo der Cache gespeichert ist |
+
+Der Kursrunner speichert den Cache lokal und getrennt je Slot: Derselbe Job kann ihn einmal treffen und einmal verfehlen und ist beide Male grün.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Fallback-Keys
+
+```yaml
+# Beispiel
+cache:
+  key: "pip-$CI_COMMIT_REF_SLUG"
+  fallback_keys: ["pip-main"]
+  paths: [.cache/pip]
+```
+
+Ein Fallback-Key nennt einen zweiten Cache für den Fall, dass der erste fehlt: Ein neuer Branch startet hier mit dem Cache von `main`. Das lohnt sich nur, wenn der alte Inhalt noch passt.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Wheel-Artifact: Inhalt und Prüfung
+
+`python -m build --wheel` erzeugt `dist/messwert-1.0.0-py3-none-any.whl`.
+
+| Im Wheel | Nicht im Wheel |
+|---|---|
+| Paket `messwert` aus `src/` | pip-Cache `.cache/pip` |
+| HTML-Templates über `package-data` | Tests |
+| Liste der Abhängigkeiten aus `pyproject.toml`, nicht die Pakete selbst | Secret-/Environment-Dateien |
+
+`install_check` installiert das Wheel in einer frischen Umgebung und importiert `messwert.app`. **Dass `python -m build` durchläuft, reicht nicht:** Fehlt `package-data`, fehlen die Templates. Der Import klappt trotzdem, und erst `container_smoke` wird rot.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## `expire_in`: Lebensdauer von Artifacts
+
+Ausschnitt aus dem Job `build_wheel`:
+
+```yaml
+build_wheel:
+  artifacts:
+    paths: [dist/]
+    expire_in: 1 week
+```
+
+Die eine Woche hat das Projekt festgelegt. Das ist kein GitLab-Default und keine Zusage, dass das Wheel dauerhaft archiviert wird.
+
+Klären Sie einzeln: Wie lange heben wir das Wheel auf? Wer braucht es nach Ablauf noch? Wie stellen wir es wieder her? Neu bauen aus einem versionierten Stand ist zuverlässiger als ein alter Download.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Wheel in `install_check` prüfen
+
+`install_check` installiert `dist/*.whl`. Mit `artifacts: false` im `needs`-Eintrag wird er rot:
+
+```text
+WARNING: Requirement 'dist/*.whl' looks like a filename, but the file does not exist
+```
+
+| Symptom | Prüfung |
+|---|---|
+| `build_wheel` grün, `install_check` findet kein Wheel | Pfad und `needs:artifacts` |
+| Wheel installiert, Import scheitert | Laufzeitpakete in `requirements.txt` |
+| Import klappt, Templates fehlen | `package-data` in `pyproject.toml` |
+| Wheel enthält alten Stand | Mit aktuellem Quellstand vergleichen |
+
+Ein `echo "Paket erhalten"` prüft davon nichts.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Abgelaufene und gelöschte Artifacts
+
+Ist ein benötigtes Artifact gelöscht oder abgelaufen, kann der Job fehlschlagen, der es braucht.
+
+Hat ein früherer Job dagegen **gar kein Artifact erzeugt**, liegt der Fehler in dessen Skript oder `paths`. Die GitLab-Doku behandelt beide Fälle getrennt.
+
+Starten Sie den Job neu, der das Artifact erzeugt, oder ändern Sie, wie es übergeben wird. Ein zufällig vorhandener Cache ersetzt nicht das Wheel-Artifact aus dem richtigen Commit.
+
+[GitLab: `dependencies` und abgelaufene Artifacts](https://docs.gitlab.com/ci/yaml/#dependencies)
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Rückblick Teil VI
+
+Bei einer Variable: Wo ist sie definiert, bekommt der Job sie, welcher Wert gewinnt? Bei einem Secret auch: Welcher Code darf laufen?
+
+Bei Dateien: Kommt die richtige Datei an, stimmt ihr Inhalt, wie lange bleibt sie verfügbar? Der Cache spart Zeit, Artifacts reichen Dateien weiter.
+
+Im nächsten Teil geht es darum, wo Jobs laufen, und um Tests und Reports.
+</div></script></section></section><section ><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" data-background-color="#183b66" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+# Teil VII · Runner, Container und Tests
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Lernziele Teil VII
+
+Sie können:
+
+- &shy;<!-- .element: class="fragment" data-fragment-index="1" -->sagen, wer einen Runner nutzt, wie er Jobs ausführt und was er darf, 
+- &shy;<!-- .element: class="fragment" data-fragment-index="2" -->Jobimage, Service, Builder und Produktimage unterscheiden, 
+- &shy;<!-- .element: class="fragment" data-fragment-index="3" -->Tests, Exit-Code, JUnit, Coverage und Image-Digest einzeln auswerten.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Runner-Scopes: Instance, Group, Project
+
+| Runner-Scope | Zuordnung | Frage für das Projekt |
+|---|---|---|
+| Instance | Alle Projekte der Instanz | Mit wem teilen wir uns den Runner? |
+| Group | Gruppe und Untergruppen | Wer darf Jobcode darauf laufen lassen? |
+| Project | Nur zugewiesene Projekte | Dürfen weitere Projekte ihn nutzen? |
+
+Auch ein Project-Runner kann mehreren Projekten dienen. **Der Host gehört Ihnen damit nicht allein.**
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Executor: Shell, Docker, Kubernetes
+
+| Executor | Wo der Job läuft | Worauf es für den Job ankommt |
+|---|---|---|
+| Shell | Prozess auf dem Host | Werkzeuge und Rechte des Hosts |
+| Docker | Im Jobcontainer | Image, Mounts und Privilegien |
+| Kubernetes | Pod mit Build-/Servicecontainern | Clusterrechte und Policies |
+
+Scope und Executor wählen Sie unabhängig. Derselbe Testjob läuft daher je nach Runner gut abgeschottet oder nicht.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Runner-Registrierung mit Authentication-Token
+
+So registrieren Sie einen Runner:
+
+1. &shy;<!-- .element: class="fragment" data-fragment-index="1" -->Runner in der GitLab-UI oder per API anlegen. 
+1. &shy;<!-- .element: class="fragment" data-fragment-index="2" -->Token kopieren: Es beginnt mit `glrt-`. 
+1. &shy;<!-- .element: class="fragment" data-fragment-index="3" -->Runner auf dem Host mit dem Token registrieren, Executor einstellen. 
+
+<div class="fragment" data-fragment-index="4">
+
+```bash
+gitlab-runner register --token "$RUNNER_AUTHENTICATION_TOKEN"
+```
+
+Der Befehl meldet den Runner nur an. Welche Projekte ihn nutzen und ob er geschützt ist (nur für geschützte Branches und Tags), stellen Sie in GitLab ein. Zeigen Sie das Token nie im Log oder auf dem Bildschirm. Der frühere Weg über Registration-Tokens ist abgekündigt.
+
+[GitLab: Runner-Registrierungsworkflow](https://docs.gitlab.com/ci/runners/new_creation_workflow/)
+
+</div>
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Runner-Tags
+
+```yaml
+# Gegenbeispiel: ein Tag, den kein Runner hat
+integration_tests:
+  stage: test
+  tags: [absichtlich-kein-runner]
+```
+
+| Runner-Tags | Nimmt er `integration_tests`? |
+|---|---|
+| `docker` (Kursrunner `schulung-docker-runner`) | Nein, der Job bleibt `pending` |
+| `absichtlich-kein-runner` | Ja |
+| `absichtlich-kein-runner, linux` | Ja |
+
+Ohne `tags` im Job nimmt der Kursrunner den Job. Ein Runner braucht alle Tags des Jobs, muss dem Projekt zugeordnet, für den Ref erlaubt und frei sein. Runner-Tags sind keine Git-Tags und sagen nichts über Sicherheit.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Diagnose: Job bleibt `pending`
+
+| Was Sie sehen | Was Sie prüfen |
+|---|---|
+| Kein passender Runner angezeigt | Dem Projekt zugeordnet und online? |
+| Runner hat nur einige Jobtags | Alle Tags des Jobs vergleichen |
+| Geschützter Runner, Ref passt nicht | Schutzregeln prüfen |
+| Passender Runner ist belegt | Freie Slots und Warteschlange |
+
+Solange der Job wartet, startet sein Skript nicht, und es gibt kein Log. An einem Fehler in `validation.py` kann es nicht liegen.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## `needs` und Runner-Kapazität
+
+Mit `needs` wartet ein Job nur auf die Jobs, die er braucht. Ob er dann sofort startet, hängt an freien Runnern.
+
+Eine Testmatrix (`parallel:matrix`) macht aus einem Job mehrere. Gibt es zu wenig Slots, laufen sie nacheinander statt parallel.
+
+**Drei Zustände:** wartet auf andere Jobs, wartet auf einen Runner, läuft.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Zielbild der Runner-Umgebung
+
+<img src="figs/runner-trust.png" alt="Zielbild: kontrollierter Runner-Zugriff, begrenzter Jobcontainer, Builder, Registry und Logs." style="object-fit: scale-down">
+
+
+Das Bild zeigt, wie eine abgesicherte Runner-Umgebung aufgebaut sein soll. Ihr echter Runner kann anders konfiguriert sein. Jobcode darf alles, was der Runner ihm erlaubt.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Vier Containerrollen im Projekt
+
+| Rolle | Im Projekt | Aufgabe |
+|---|---|---|
+| Jobimage | `python:3.13-slim` | Python und pip, Werkzeuge aus `requirements-dev.txt` |
+| Service | `postgres:17-alpine`, Alias `db` | Datenbank für Integrations- und Smoke-Test |
+| Builder | `docker:27` mit Service `docker:27-dind` | Baut das Image aus dem Dockerfile |
+| Produktimage | Messwertprüfung (`uvicorn`) | Die Anwendung selbst, erreichbar auf Port `8080` |
+
+`docker build` braucht einen Docker-Daemon, und im Jobcontainer läuft nicht automatisch einer. Auch mit `image: docker:27` fehlt er noch: Im Projekt liefert ihn der Service `docker:27-dind`.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Service-Alias im Jobnetz
+
+Job mit Service (Ausschnitt):
+
+```yaml
+integration_tests:
+  services:
+    - name: postgres:17-alpine
+      alias: db
+  variables:
+    POSTGRES_DB: messwert
+    POSTGRES_USER: app
+    POSTGRES_PASSWORD: nur-fuer-tests
+    DATABASE_URL: "postgresql://app:nur-fuer-tests@db:5432/messwert"
+  script:
+    - pytest tests/integration --junitxml=report-integration.xml
+```
+
+Unter dem Alias `db` erreicht der Job den Servicecontainer, `localhost` klappt beim Docker-Executor nicht. `POSTGRES_…` liest der Service beim Start, `DATABASE_URL` die Anwendung. Die Testwerkzeuge stammen aus dem Jobimage.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Testdaten des Integrationstests
+
+Der Test lädt diese CSV hoch:
+
+```text
+device,value,lower,upper,unit
+Sensor-A,20.3,19,21,C
+Sensor-B,23.1,19,21,C
+Sensor-C,19,19,21,C
+```
+
+Sensor-B liegt außerhalb. Sensor-C liegt mit 19 genau auf der unteren Grenze und gehört zum Bereich. Der Test erwartet deshalb drei Messwerte, davon **einen außerhalb**.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Integrationstest: speichern und wieder lesen
+
+Der Integrationstest prüft den Weg durch API und PostgreSQL:
+
+```python
+def test_report_is_saved_and_read_back(client):
+    response = client.post("/api/reports", files={"datei": ("messung.csv", CSV, "text/csv")})
+    assert response.status_code == 201, response.text
+    report_id = response.json()["id"]
+
+    read_back = client.get(f"/api/reports/{report_id}").json()
+    assert read_back["dateiname"] == "messung.csv"
+    assert read_back["anzahl"] == 3
+    assert read_back["ausserhalb"] == 1
+```
+
+PostgreSQL startet nicht sofort: Die Anwendung versucht deshalb bis zu 30-mal im Sekundenabstand, die Datenbank zu erreichen. Der Test verlangt den gespeicherten Bericht mit Dateiname und Zählung zurück. **Eine Datenbank, die nur antwortet, reicht nicht.**
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## `integration_tests` rot: falscher Host oder Fehler am Grenzwert
+
+| Änderung | Ausgabe in `integration_tests` | Ursache |
+|---|---|---|
+| Host `datenbank` statt `db` | `failed to resolve host 'datenbank'`, `6 errors` nach ca. 30 s | Service unter diesem Namen nicht erreichbar |
+| `lower < value` statt `lower <= value` | `assert 2 == 1`: Sensor-C liegt genau auf der Grenze und zählt als außerhalb | Programm entscheidet den Grenzwert falsch |
+
+Ein Verbindungsfehler tritt schon beim Vorbereiten des Tests auf und erscheint als `error`. Ein falsch entschiedener Messwert erscheint als `failed`.
+
+Der Integrationstest findet den Fehler am Grenzwert auch. Die Unit-Tests ersetzt er nicht: Sie finden ihn schneller und ohne Datenbank. Der Endpunkt `/ready` sagt nur, dass die Datenbank erreichbar ist.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Docker-in-Docker, Socket-Binding, Rootless BuildKit
+
+| Weg zum Image-Build | Welcher Docker-Daemon baut | Zu klären |
+|---|---|---|
+| Klassisches Docker-in-Docker | Separater Daemon als Service | Läuft privilegiert, gefährdet den Host |
+| Docker-Socket-Binding | Host-Daemon | Job steuert Container des Hosts |
+| Rootless BuildKit | Eigenständiger Builder ohne Host-Docker-Socket | Erlaubte Kernel-/Security-Rechte |
+
+Keiner der Wege ist immer der sicherste. Klären Sie für jeden Runner, was er darf und welchen Host er betrifft.
+
+[GitLab: Docker-Build-Wege und Risiken](https://docs.gitlab.com/ci/docker/using_docker_build/)
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Image-Build im Kurs: Docker-in-Docker
+
+```yaml
+build_image:
+  image: docker:27
+  services: [docker:27-dind]
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs"
+    IMAGE: "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
+  needs: [build_wheel, integration_tests]
+  script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login …   # Anmeldung an der Registry
+    - docker build --build-arg BUILD_COMMIT="$CI_COMMIT_SHORT_SHA" -t "$IMAGE" .
+    - docker push "$IMAGE"
+```
+
+`docker:27-dind` startet einen eigenen Daemon nur für diesen Job. Das geht nur, weil der Kursrunner `privileged` läuft. Die `rules` (hier weggelassen) lassen den Job nur auf `main` und bei Tags zu. Nach dem Push **liegt das Image in der Registry**. Ob es startet, wissen Sie noch nicht.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Produktion: rootless bauen
+
+Ein privilegierter Container kann fast alles auf dem Host, und wer YAML oder Dockerfile ändert, bekommt diese Rechte mit. Rootless BuildKit baut ohne `privileged` und ohne Host-Socket, braucht aber andere Kernelrechte.
+
+| Prüfen Sie | Worauf es ankommt |
+|---|---|
+| Gemounteter Docker-Socket | Dann greift der Job auch mit `privileged: false` weit in den Host |
+| Kernelrechte | Benutzer-Namespaces erlaubt, seccomp und AppArmor bleiben an |
+| Prozessisolation (BuildKit-Flag) | `--oci-worker-no-process-sandbox` trennt Buildprozesse schlechter |
+| Wer den Code ändert | Ungeprüfte MRs nie auf privilegierten Runnern oder mit Secrets |
+
+[GitLab: BuildKit-Voraussetzungen](https://docs.gitlab.com/ci/docker/using_buildkit/) · [BuildKit: Risiken des Flags](https://github.com/moby/buildkit/blob/master/docs/rootless.md#containerized-deployment) · [GitLab: Socket-Binding](https://docs.gitlab.com/ci/docker/using_docker_build/#known-issues-with-docker-socket-binding)
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Registry-Variablen: Adresse, Zugang, Imagepfad
+
+| Variable | Bedeutung |
+|---|---|
+| `CI_REGISTRY` | Adresse der Registry |
+| `CI_REGISTRY_USER` / `CI_REGISTRY_PASSWORD` | Login nur für diesen Job |
+| `CI_REGISTRY_IMAGE` | Imagepfad des Projekts |
+| `CI_COMMIT_SHORT_SHA` | Commit-Kürzel als Image-Tag |
+
+Bei Self-Managed muss ein Admin die Registry einschalten und erreichbar machen. Dass sie zu Ihrem Tier gehört, heißt nicht, dass sie bei Ihnen läuft.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Registry-Anmeldung ohne Passwortargument
+
+Aus dem Skript von `build_image`, auf zwei Zeilen umbrochen:
+
+```bash
+echo "$CI_REGISTRY_PASSWORD" |
+  docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
+```
+
+`CI_REGISTRY_PASSWORD` ist das Job-Token: Es gilt nur, solange der Job läuft. Im Log steht danach `Login Succeeded`. Docker legt die Anmeldung in einer Authdatei im Jobcontainer ab. Diese Datei gehört weder ins Repository noch ins Produktimage.
+
+Mit `--password-stdin` steht das Passwort nicht in der Befehlszeile. Prüfen Sie trotzdem Debugausgaben sowie Zugriffsrechte und Aufbewahrung der Authdatei.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Dockerfile des Produktimages
+
+Nach `FROM python:3.13-slim` und `ARG BUILD_COMMIT`:
+
+```dockerfile
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY dist/*.whl /tmp/
+RUN pip install --no-cache-dir --no-deps /tmp/*.whl && rm /tmp/*.whl
+USER 10001:10001
+EXPOSE 8080
+CMD ["uvicorn", "messwert.app:app", "--host", "0.0.0.0", "--port", "8080"]
+```
+
+Das Image installiert das Wheel aus `build_wheel`, nicht den Checkout: `dist/` kommt über `needs` als Artifact in den Job `build_image`. `EXPOSE` notiert den Port nur, nach außen geöffnet ist er damit nicht. Der Prozess läuft als `uid=10001`, nicht als root.
+
+[Docker: EXPOSE](https://docs.docker.com/reference/dockerfile/#expose)
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Image-Tag und Digest
+
+Aus dem Log von `build_image`:
+
+```text
+Gebaut und gepusht gitlab.devadze.de:5050/schulung/messwert-tnXX@sha256:c3e9f0fd…
+```
+
+Der Image-Tag in der Registry ist `CI_COMMIT_SHORT_SHA`, z. B. `8d247922`. Über den Commit im Tag finden Sie vom Image zurück zum Code. Einen Image-Tag kann man aber auf ein anderes Image umhängen. Notieren Sie bei der Übergabe deshalb den **Digest**: Er ist die Prüfsumme des Inhalts. Mit `latest` allein finden Sie den gebauten Stand nicht sicher wieder.
+
+[Docker: Image-Digests](https://docs.docker.com/dhi/explore/security-concepts/digests/)
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Digest an spätere Jobs übergeben
+
+Aus dem Skript von `build_image`:
+
+```yaml
+    - DIGEST=$(docker inspect --format '{{index .RepoDigests 0}}' "$IMAGE")
+    - echo "IMAGE_DIGEST=$DIGEST" > image.env
+  artifacts:
+    reports:
+      dotenv: image.env
+```
+
+`reports:dotenv` liest die Datei ein: `IMAGE_DIGEST` steht danach in späteren Jobs als Variable bereit.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Smoke-Test gegen das gebaute Image
+
+```yaml
+container_smoke:
+  needs: [build_image]
+  services:
+    - name: postgres:17-alpine
+      alias: db
+    - name: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+      alias: app
+  variables:
+    FF_NETWORK_PER_BUILD: "true"      # damit "app" die Datenbank "db" erreicht
+    BASE_URL: "http://app:8080"
+  script:
+    - echo "Prüfe $IMAGE_DIGEST"
+    - pytest tests/smoke --junitxml=report-smoke.xml
+```
+
+Das Image läuft als Service `app` neben einer frischen Datenbank. Der Test lädt eine CSV hoch, liest den Bericht und ruft die Oberfläche ab: `3 passed`. Geprüft wird das laufende Image, nicht der Quelltext.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Die vier Testarten im Projekt
+
+| Prüfung | Frage im Projekt | Nicht geprüft |
+|---|---|---|
+| `tests/unit` (17) | Entscheidet `validation.py` die Grenzen richtig, lehnt es kaputte CSV ab? | Datenbank, Image |
+| `tests/integration` (6) | Wird ein Bericht in PostgreSQL gespeichert und wieder gelesen? | Inhalt des Images |
+| `tests/scenarios` (3 gültige + 4 ungültige Dateien) | Verhalten sich die vorbereiteten CSV-Dateien wie erwartet? | API und Datenbank |
+| `tests/smoke` (3) | Arbeitet das gebaute Image mit frischer Datenbank? | Deployment und Last |
+
+Zusammen 33 Tests. Die Unit-Tests sind grün, auch wenn im Image die Templates fehlen. Wählen Sie den Test, der genau das prüft, was Sie zusichern.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## JUnit-Report und Jobstatus
+
+XML des roten Grenzwerttests, gekürzt:
+
+```xml
+<testsuites name="pytest tests">
+  <testsuite name="pytest" errors="0" failures="1" skipped="0" tests="17">
+    <testcase classname="tests.unit.test_validation"
+              name="test_lower_limit_is_within_range">
+      <failure message="assert False …">…</failure>
+    </testcase>
+  </testsuite>
+</testsuites>
+```
+
+pytest schreibt das XML im JUnit-Format mit `--junitxml`. GitLab erkennt einen Test in späteren Pipelines an gleichbleibendem `classname` und `name` wieder. **Rot wird der Job durch den Exit-Code von pytest ungleich 0, nicht durch das XML.**
+
+[GitLab: Unit-Test-Reports](https://docs.gitlab.com/ci/testing/unit_test_reports/)
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## JUnit-Report als Artifact
+
+Ausschnitt aus `integration_tests`:
+
+```yaml
+  script:
+    - pytest tests/integration --junitxml=report-integration.xml
+  artifacts:
+    when: always
+    reports:
+      junit: report-integration.xml
+```
+
+Mit `reports:junit` wertet GitLab die Tests aus. `when: always` lädt den Report auch hoch, wenn pytest mit Fehler endet. Wer die Datei selbst herunterladen will, ergänzt `paths:`.
+
+Im MR vergleicht GitLab die Testergebnisse mit dem Zielbranch. Dafür braucht es auch von dort einen Report.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## JUnit-Report: Test wiedererkennen
+
+pytest setzt `classname` aus dem Modulpfad (`tests.unit.test_validation`) und `name` aus der Testfunktion. In `tests/scenarios` steht der Szenarioname in der ID, z. B. `test_scenario[valid-temperature]`.
+
+| Bestandteil | Zweck |
+|---|---|
+| `classname` und `name` | Testfall wiedererkennen |
+| `file` | Zur Testdatei führen (pytest schreibt es nur mit `junit_family=xunit1`) |
+| `failure` / `error` | Zeigen, was schiefging |
+| Szenario im Testnamen | Varianten unterscheiden |
+
+Dass Sie das XML herunterladen können, heißt nicht, dass GitLab es richtig eingelesen hat. Das zeigt der Tab **Tests** der Pipeline.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Coverage: Formel und Nenner
+
+Bei Coverage nach Zeilen gilt:
+
+**Coverage = erfasste ausgeführte Zeilen / erfasste ausführbare Zeilen × 100 %**
+
+Beispiel: `6 / 8 × 100 % = 75 %`. Der Nenner sind die acht ausführbaren Zeilen. Kommentare und andere Textzeilen zählen nicht.
+
+pytest-cov misst im Projekt mit `branch = true`: Dann zählen auch die Zweige von Bedingungen in Zähler und Nenner. Die 75 % oben sind ein Rechenbeispiel. Im Projekt messen nur die Unit-Tests: 67 % gesamt, `validation.py` 100 %. `app.py` und `db.py` laufen nur zum Teil, weil die Unit-Tests keine Datenbank haben.
+
+[coverage.py: Branch-Coverage](https://coverage.readthedocs.io/en/latest/branch.html)
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Coverage-Wert aus dem Job-Log
+
+Ausschnitt aus `unit_tests`:
+
+```yaml
+  coverage: '/^TOTAL.*\s(\d+(?:\.\d+)?)%$/'
+```
+
+Letzte Zeile der Tabelle im Log, Spalten gekürzt:
+
+```text
+TOTAL   …   67%
+```
+
+`--cov-report=term` schreibt die Tabelle von pytest-cov ins Log. `coverage:` holt die Zahl nur aus dem Log. GitLab misst selbst nichts.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Coverage-Annotation im MR-Diff
+
+```yaml
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+```
+
+`--cov-report=xml:coverage.xml` schreibt die Datei. Die Markierung im Diff funktioniert unabhängig vom Regex im Log. Die Pfade im XML müssen zum Repository passen. Markierungen erscheinen nur bei **geänderten Dateien im MR-Diff**.
+
+Fehlt eine Markierung, kann das am Pfad oder an der Verarbeitung liegen. Die Coverage ist deshalb nicht null.
+
+[GitLab: Coverage-Auswertung und Visualisierung](https://docs.gitlab.com/ci/testing/code_coverage/)
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Coverage und Assertion
+
+Ein Test ruft `is_within_limits(19, 19, 21)` auf (Wert 19, Grenzen 19 und 21) und prüft nur, dass ein Wahrheitswert zurückkommt.
+
+Die Zeile zählt dann als ausgeführt, auch mit dem Fehler am Grenzwert `lower < value`. `validation.py` bleibt so bei 100 %.
+
+Erst `assert is_within_limits(19, 19, 21)` verlangt das **richtige Ergebnis am Grenzwert**. Coverage zeigt, was lief. Die Assertion prüft, ob es stimmt.
+
+Ein Pflicht-Approval bei zu wenig Coverage gibt es nur in **Premium/Ultimate**. Free hat das nicht.
+
+[GitLab: Coverage-Check](https://docs.gitlab.com/ci/testing/code_coverage/coverage_reporting/)
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Testmatrix mit `SCENARIO`
+
+Der Job `scenarios` läuft als Matrix, einmal je Wert von `SCENARIO`:
+
+```yaml
+scenarios:
+  parallel:
+    matrix:
+      - SCENARIO: [valid, invalid]
+  script:
+    - pytest tests/scenarios --junitxml=report-$SCENARIO.xml
+```
+
+Der Test liest die Dateien aus `testdata/$SCENARIO`: `valid` hat drei CSV-Dateien, `invalid` vier. Bei `invalid` ist der Test grün, wenn die Anwendung die Datei ablehnt.
+
+Die Szenarien **testen unterschiedlich viel**. Die Matrix teilt keine Arbeit in gleich große Stücke auf.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## `parallel: 2` und `parallel:matrix` im Vergleich
+
+| Konfiguration | Was entsteht? | Was Sie selbst tun müssen |
+|---|---|---|
+| `parallel: 2` | Zwei Instanzen desselben Jobs | Tests selbst aufteilen, mit `CI_NODE_INDEX` und `CI_NODE_TOTAL` |
+| `parallel:matrix` | Ein Job je Variablenkombination | Varianten und erwartete Testzahl festlegen |
+
+Im Projekt laufen zwei Szenarien, jedes schreibt seinen eigenen Report `report-$SCENARIO.xml`. Lädt ein späterer Job die Artifacts mehrerer Matrix-Jobs, dürfen sich gleiche Pfade nicht still überschreiben.
+
+Der Job `build_wheel` wartet nur auf `lint` und `unit_tests`, nicht auf die Szenarien.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Kette: Testlauf, Report, Upload, MR-Anzeige
+
+<img src="figs/test-nachweise.png" alt="Testausführung, Report, Upload und MR-Anzeige sind getrennte Nachweisschritte." style="object-fit: scale-down">
+
+
+Test gelaufen, Report geschrieben, hochgeladen und **im MR richtig angezeigt**: vier getrennte Schritte. Ob die Anzeige klappt, sehen Sie nur in einem MR auf Ihrer Instanz.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Diagnose: Tests und Reports
+
+| Symptom | Prüfen Sie |
+|---|---|
+| Test schlägt fehl, Job grün | Exit-Code des Testbefehls und `allow_failure` |
+| Job grün, keine Testfälle | Tests gefunden? XML leer? |
+| XML downloadbar, Testpanel leer | `reports:junit`, Format und Testnamen |
+| Coverage-Zahl da, Diff ohne Markierung | `coverage_report` und XML-Pfade |
+| `build_image` grün, Smoke-Test rot | `CMD`, Rechte, Port und Paketinhalt |
+
+Jedes Fehlerbild zeigt auf einen anderen Schritt.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Diagnose: vier Fehlerorte
+
+| Fehlerort | Änderung | Was Sie sehen |
+|---|---|---|
+| Fachlogik | `lower < value` statt `lower <= value` | `unit_tests` rot: `1 failed, 16 passed` |
+| Konfiguration | `tags: [absichtlich-kein-runner]` | Job `pending`, kein Log |
+| Service | Host `datenbank` statt `db` | `failed to resolve host 'datenbank'`, `6 errors` |
+| Paketierung | `package-data` fehlt in `pyproject.toml` | Nur `container_smoke` rot: `assert 500 == 200` |
+
+Nur die erste Zeile ist ein Fehler im Programm. Den Paketierungsfehler sehen die Unit-Tests nicht: Im Checkout liegen die Templates, im Wheel fehlen sie.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Rückblick Teil VII
+
+Runner-Rechte und Jobcode bestimmen, **worauf ein Job zugreifen kann**. Die vier Containerrollen trennen Werkzeug (Jobimage, Builder), Hilfsdienst (Service) und Produkt.
+
+Exit-Code, Testreport, Coverage und Image-Digest prüfen Sie jeweils einzeln. Der Smoke-Test gegen das Image ergänzt den Grenzwerttest, ersetzt ihn aber nicht.
+
+Im nächsten Teil prüfen wir, ob Auto DevOps, eine fertige Pipeline von GitLab, zum Projekt passt.
+</div></script></section></section><section ><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" data-background-color="#183b66" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+# Teil VIII · Auto DevOps und nächste Schritte
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Lernziele Teil VIII
+
+Sie können:
+
+- &shy;<!-- .element: class="fragment" data-fragment-index="1" -->erklären, was Auto DevOps anders macht als Ihre Pipeline, 
+- &shy;<!-- .element: class="fragment" data-fragment-index="2" -->für Build, Test und Deployment einzeln prüfen, ob die Vorgaben zum Projekt passen, 
+- &shy;<!-- .element: class="fragment" data-fragment-index="3" -->einen kleinen nächsten Schritt planen und sagen, wie Sie ihn testen. 
+
+<div class="fragment" data-fragment-index="4">
+
+**Was erkennt Auto DevOps an einem Projekt von selbst, was müssen Sie konfigurieren?**
+
+</div>
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Auto DevOps: vorkonfigurierter Ablauf
+
+Auto DevOps ist eine fertige Pipeline von GitLab: Sie erkennt, wie das Projekt gebaut wird, baut und testet es und ergänzt Schritte je nach Projekt und Infrastruktur.
+
+| Bisher | Auto DevOps |
+|---|---|
+| Jobs und Regeln selbst schreiben | Vorgaben von GitLab nutzen und prüfen |
+| Werkzeuge und Eingaben selbst festlegen | Prüfen, ob Erkennung und Standardpfade passen |
+
+Gibt es eine `.gitlab-ci.yml`, nutzt GitLab diese und nicht die Auto-DevOps-Pipeline.
+
+[GitLab: Auto DevOps](https://docs.gitlab.com/topics/autodevops/)
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Auto DevOps an der Messwertprüfung
+
+| Ohne `.gitlab-ci.yml`: Was Auto DevOps vorfindet | Was folgt daraus? |
+|---|---|
+| Dockerfile vorhanden | Auto Build baut mit `docker build` |
+| Dockerfile erwartet `dist/*.whl` | Im frischen Checkout fehlt das Wheel, `COPY dist/*.whl` scheitert |
+| pytest-Suite vorhanden | Ob Auto Test sie erkennt, ist offen |
+| Dienst `/health` vorhanden | Noch kein Deploymentziel |
+| Eigenes YAML vorhanden | Es gilt. Auto DevOps liefe erst ohne `.gitlab-ci.yml` |
+
+Auto Build braucht ein passendes Buildpack oder Dockerfile. **Ein gebautes Image heißt nicht, dass der Grenzwerttest gelaufen ist.**
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Auto Test: Taugt die Vorlage?
+
+Eine fertige Pipeline wie Auto Test taugt erst, wenn diese fünf Fälle stimmen:
+
+| Fall | Erwartung |
+|---|---|
+| Grenzwertprüfung korrekt | Unit-Tests grün |
+| `lower < value` eingebaut | Grenzwerttest rot, Job rot |
+| Report vorhanden | Echte Testnamen im Ergebnis |
+| Installation aus `requirements*.txt` | Dieselben festen Versionen wie bisher |
+| Integrationstests mit PostgreSQL | `6 passed` gegen eine echte Datenbank |
+
+Diese fünf Punkte verlangen wir auch von der eigenen Pipeline. Auto Test stellt laut Doku eine temporäre PostgreSQL bereit, ein bloßes `pytest` führt im Projekt aber nur `tests/unit` aus. Ein erkanntes Projekt oder ein grüner Build sagt dazu nichts.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Auto Deploy: Voraussetzungen für Kubernetes
+
+Für ein **Deployment nach Kubernetes** brauchen Sie:
+
+- &shy;<!-- .element: class="fragment" data-fragment-index="1" -->Zugang zum Cluster und eine abgesprochene Deploymentstrategie, 
+- &shy;<!-- .element: class="fragment" data-fragment-index="2" -->Ingress und Base-Domain mit passendem Wildcard-DNS, 
+- &shy;<!-- .element: class="fragment" data-fragment-index="3" -->einen passenden Runner und klar begrenzte Rechte. 
+
+<div class="fragment" data-fragment-index="4">
+
+Auto DevOps geht auch ohne Kubernetes: Build und Test helfen schon vorher. Für andere Ziele lesen Sie deren eigene Doku.
+
+[GitLab: Auto-DevOps-Voraussetzungen](https://docs.gitlab.com/topics/autodevops/requirements/)
+
+</div>
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Auto DevOps: vom grünen Build zum Rollout
+
+| Gezeigt | Noch offen |
+|---|---|
+| Image erfolgreich gebaut | Holt das Ziel es aus der Registry? |
+| Image erfolgreich gepusht | Startet es mit den richtigen Rechten? |
+| `/health` des Images grün | Prüft das Produkt die Grenzen richtig? |
+| Pipeline grün, Deploy-Job übersprungen | Ist es ausgeliefert? |
+
+Für die Produktion braucht es Monitoring, einen Rückfallplan und jemanden, der freigibt. Einen Kubernetes-Rollout machen wir im Seminar nicht.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Auto DevOps: Verfügbarkeit nach Tier
+
+Auto DevOps selbst ist in **Free, Premium und Ultimate** verfügbar.
+
+| Teilfunktion | Tier laut Doku |
+|---|---|
+| SAST-Basis-Scans (statische Codeanalyse) | Alle Tiers (erweiterte Auswertung extra) |
+| Auto DAST (Test der laufenden Anwendung) | Ultimate |
+| Auto Browser-/Load-Performance | Premium, Ultimate |
+
+**Prüfen Sie für jede Teilfunktion einzeln, ob Ihr Tier sie enthält und ob sie bei Ihnen läuft.**
+
+[GitLab: Auto DevOps und zugehörige Stages](https://docs.gitlab.com/topics/autodevops/stages/)
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Auto DevOps oder eigene Pipeline?
+
+| Frage | Dann |
+|---|---|
+| Passen Build und Test zu den Vorgaben? | Vorlage in einem kleinen Piloten testen |
+| Sind Deploymentziel und Rechte bereit? | Deployment testen |
+| Sehr eigene Anforderungen an PostgreSQL-Tests, Image-Prüfung und Gates? | Eigene Pipeline behalten oder kombinieren |
+| Viele Overrides, keiner versteht das Ganze? | Aufwand mit eigenem YAML vergleichen |
+
+Bei der Messwertprüfung bleibt es bei der eigenen Pipeline, weil man sie nachvollziehen kann. Das gilt für dieses Projekt, nicht für Auto DevOps allgemein.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Nächste Schritte und ihre Prüfung
+
+Für Ihr eigenes Projekt: Legen Sie für jeden Schritt fest, woran Sie Erfolg und Fehler erkennen. „Grün“ allein sagt zu wenig.
+
+| Nächster Schritt | Bei Erfolg | Bei Fehler |
+|---|---|---|
+| Test für den Wert genau auf der Grenze ergänzen | Grenzwerte werden geprüft | Falsche Entscheidung am Grenzwert fällt auf |
+| Job ergänzen, der das gebaute Paket installiert | Genau das gebaute Paket wird installiert | Job wird rot, wenn das Wheel fehlt |
+| `workflow:rules` schärfen | Richtige Pipeline startet | Doppelte oder fehlende Pipeline fällt auf |
+
+Jeder Schritt braucht ein klares Ziel, geklärte Rechte und einen sichtbaren Erfolg oder Fehler.
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Rückblick Teil V bis VIII
+
+Die Korrektur der Grenzwertprüfung in `validation.py` hat einen Grund, einen Commit, ein Review und passende automatische Tests.
+
+Die Pipeline legt fest, wann welche Jobs laufen und was sie brauchen. Sie wissen, welche Variablen ein Job bekommt, welche Dateien er weitergibt und was Runner und Container dürfen.
+
+**Sie geben ein Ergebnis weiter und können sagen, was geprüft ist und was nicht.**
+</div></script></section></section><section ><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" data-background-color="#183b66" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+# Zum Nachschlagen
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Referenzen · Steuerung und Eingaben
+
+- &shy;<!-- .element: class="fragment" data-fragment-index="1" -->[CI/CD YAML-Referenz](https://docs.gitlab.com/ci/yaml/): Keywords und YAML-Zusammenführung. 
+- &shy;<!-- .element: class="fragment" data-fragment-index="2" -->[Workflow](https://docs.gitlab.com/ci/yaml/workflow/) und [Job-Regeln](https://docs.gitlab.com/ci/jobs/job_rules/): wann Jobs laufen. 
+- &shy;<!-- .element: class="fragment" data-fragment-index="3" -->[CI/CD-Variablen](https://docs.gitlab.com/ci/variables/): Rangfolge, Verfügbarkeit und Schutz. 
+- &shy;<!-- .element: class="fragment" data-fragment-index="4" -->[Caching](https://docs.gitlab.com/ci/caching/) und [pip-Cache](https://docs.gitlab.com/ci/caching/examples/): was der Cache leistet. 
+
+<div class="fragment" data-fragment-index="5">
+
+Bei Lizenz- und Sicherheitsfragen: Lesen Sie die Doku genau der Version, die Sie einsetzen.
+
+</div>
+</div></script></section><section data-separator="?
+---?
+" data-separator-vertical="?
+--?
+" data-separator-notes="note:" data-markdown><script type="text/template"><!-- .slide: class="drop" template="" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Referenzen · Runner, Builds und Tests
+
+- &shy;<!-- .element: class="fragment" data-fragment-index="1" -->[GitLab Runner](https://docs.gitlab.com/runner/): Executor und wo Jobs laufen. 
+- &shy;<!-- .element: class="fragment" data-fragment-index="2" -->[PostgreSQL als Service](https://docs.gitlab.com/ci/services/postgres/): Datenbank im Testjob. 
+- &shy;<!-- .element: class="fragment" data-fragment-index="3" -->[Docker-Builds](https://docs.gitlab.com/ci/docker/using_docker_build/) und [BuildKit](https://docs.gitlab.com/ci/docker/using_buildkit/): Docker-in-Docker und rootless. 
+- &shy;<!-- .element: class="fragment" data-fragment-index="4" -->[Unit-Test-Reports](https://docs.gitlab.com/ci/testing/unit_test_reports/) und [pytest-Beispiel](https://docs.gitlab.com/ci/testing/unit_test_report_examples/): was GitLab anzeigt und braucht. 
+- &shy;<!-- .element: class="fragment" data-fragment-index="5" -->[Coverage](https://docs.gitlab.com/ci/testing/code_coverage/) und [pytest-cov](https://pytest-cov.readthedocs.io/en/latest/): wie die Zahl entsteht. 
+- &shy;<!-- .element: class="fragment" data-fragment-index="6" -->[Auto DevOps](https://docs.gitlab.com/topics/autodevops/): Vorgaben, wann sie passen. 
+- &shy;<!-- .element: class="fragment" data-fragment-index="7" -->[Pro Git](https://git-scm.com/book/de/v2): Git-Modell und Arbeitsweisen.
+</div></script></section></section></div>
+    </div>
+
+    <script src="dist/reveal.js"></script>
+    <script src="plugin/notes/notes.js"></script>
+    <script src="plugin/markdown/markdown.js"></script>
+    <script src="plugin/obsidian-markdown.js"></script>
+    <script src="plugin/highlight/highlight.js"></script>
+
+    <script src="plugin/zoom/zoom.js"></script>
+    <script src="plugin/customcontrols/plugin.js"></script>
+
+
+    <script>
+        function extend() {
+            const target = {};
+            for (let i = 0; i < arguments.length; i++) {
+                const source = arguments[i];
+                for (const key in source) {
+                    if (source.hasOwnProperty(key)) {
+                        target[key] = source[key];
+                    }
+                }
+            }
+            return target;
+        }
+
+        function isLight(color) {
+            // normalize to rgb(a)
+            const optionEl = document.createElement("option");
+            optionEl.style.color = color;
+            const normalizedColor = optionEl.style.color;
+
+            const match = normalizedColor.match(/(\d+), (\d+), (\d+)/);
+            if (!match) return false;
+            const [, c_r, c_g, c_b] = match;
+
+            const brightness = ((c_r * 299) + (c_g * 587) + (c_b * 114)) / 1000;
+            return brightness > 155;
+        }
+
+        const bgColor = getComputedStyle(document.documentElement).getPropertyValue('--r-background-color').trim();
+
+        if (isLight(bgColor)) {
+            document.body.classList.add('has-light-background');
+        } else {
+            document.body.classList.add('has-dark-background');
+        }
+
+        // default options to init reveal.js
+        const defaultOptions = {
+            controls: true,
+            progress: true,
+            history: true,
+            center: true,
+            transition: 'default', // none/fade/slide/convex/concave/zoom
+            plugins: [
+                ObsidianMarkdown,
+                RevealHighlight,
+                RevealZoom,
+                RevealNotes,
+                
+                
+                
+                RevealCustomControls,
+            ],
+            allottedTime: "120",
+
+            katex: {
+                local: 'plugin/math/katex',
+                extensions: ["mhchem"],
+            },
+            markdown: {
+                gfm: true,
+            },
+            mermaid: {
+                theme: isLight(bgColor) ? 'default' : 'dark',
+            },
+            customcontrols: {
+                controls: [
+                ]
+            },
+        };
+
+        if ( pageInIframe() ) {
+            defaultOptions.scrollActivationWidth = 5;
+        }
+
+        // options from URL query string
+        const queryOptions = Reveal().getQueryHash() || {};
+
+        const options = extend(defaultOptions, {"controls":true,"progress":true,"slideNumber":"c/t","center":true,"transition":"none","transitionSpeed":"default","width":1280,"height":720,"margin":0.08,"backgroundTransition":"none"}, queryOptions);
+    </script>
+
+    <script>
+      /**
+       * KaTeX Equation Numbering Note
+       *
+       * KaTeX maintains a global equation counter for \begin{equation} environments.
+       * When navigating between slides, reveal.js math plugin may re-render math, causing
+       * equation numbers to change randomly.
+       *
+       * Note: Regular $$ blocks don't have equation numbers - only \begin{equation} does.
+       *
+       * If you experience issues with equation numbers changing:
+       * Use manual \tag{} commands: \begin{equation}\tag{1} ... \end{equation}
+       */
+
+      Reveal.initialize(options);
+    </script>
+    <!-- created with Slides Extended reveal.html template -->
+</body>
+</html>

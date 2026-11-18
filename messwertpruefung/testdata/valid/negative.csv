@@ -1,0 +1,4 @@
+# erwartet ausserhalb=0
+device,value,lower,upper,unit
+Kuehlung-1,-18.5,-20,-15,C
+Kuehlung-2,-20,-20,-15,C

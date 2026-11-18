@@ -1,0 +1,175 @@
+# Pipeline der Messwertprüfung, Stand nach Lab 12 (Endstand).
+#
+#   lint ──> unit_tests ──> build_wheel ──> install_check
+#            integration_tests ─┐    │
+#            scenarios          └────┴──> build_image ──> container_smoke
+#
+# build_image und container_smoke laufen nur auf main und bei Tags.
+
+# Wann entsteht überhaupt eine Pipeline? (Lab 07)
+workflow:
+  rules:
+    - if: $CI_COMMIT_TAG                                   # Tag gepusht
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"     # Merge Request
+    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS     # Branch mit offenem MR:
+      when: never                                          #   keine zweite Pipeline
+    - if: $CI_COMMIT_BRANCH                                # sonst jeder Branch-Push
+
+include:
+  - local: .gitlab/ci/templates.yml
+
+stages: [lint, test, build, image, verify]
+
+# Gilt für alle Jobs. (Lab 08)
+variables:
+  APP_TITLE: "Messwertprüfung (aus .gitlab-ci.yml)"
+
+# --- lint --------------------------------------------------------------------
+lint:
+  stage: lint
+  extends: .python
+  script:
+    - ruff check .
+    - ruff format --check .
+
+# Zeigt, woher Variablen kommen. Startet nur per Klick. (Lab 08)
+show_variables:
+  stage: lint
+  image: alpine:3.20
+  when: manual
+  variables:
+    APP_TITLE: "Messwertprüfung (aus dem Job)"
+  script:
+    - echo "APP_TITLE = $APP_TITLE"
+    - echo "Secret    = $TRAINING_DUMMY_SECRET"
+    - echo "TRAINING_FILE = $TRAINING_FILE"
+    - cat "$TRAINING_FILE"
+
+# --- test --------------------------------------------------------------------
+unit_tests:
+  stage: test
+  extends: .python
+  script:
+    - pytest tests/unit --junitxml=report-unit.xml --cov --cov-report=term --cov-report=xml:coverage.xml
+  # Die Zahl aus der Logzeile "TOTAL ... 67%" wird als Coverage angezeigt. (Lab 12)
+  coverage: '/^TOTAL.*\s(\d+(?:\.\d+)?)%$/'
+  artifacts:
+    when: always          # Report auch hochladen, wenn Tests scheitern
+    reports:
+      junit: report-unit.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+
+# Neben dem Job startet ein PostgreSQL-Container, erreichbar unter dem Namen "db". (Lab 10)
+integration_tests:
+  stage: test
+  extends: .python
+  services:
+    - name: postgres:17-alpine
+      alias: db
+  variables:
+    POSTGRES_DB: messwert
+    POSTGRES_USER: app
+    POSTGRES_PASSWORD: nur-fuer-tests      # Wegwerf-Datenbank, existiert nur während des Jobs
+    DATABASE_URL: "postgresql://app:nur-fuer-tests@db:5432/messwert"
+  script:
+    - pytest tests/integration --junitxml=report-integration.xml
+  artifacts:
+    when: always
+    reports:
+      junit: report-integration.xml
+
+# Zwei Jobs aus einer Definition: SCENARIO=valid und SCENARIO=invalid. (Lab 12)
+scenarios:
+  stage: test
+  extends: .python
+  parallel:
+    matrix:
+      - SCENARIO: [valid, invalid]
+  script:
+    - pytest tests/scenarios --junitxml=report-$SCENARIO.xml
+  artifacts:
+    when: always
+    reports:
+      junit: report-$SCENARIO.xml
+
+# --- build (Lab 09) ----------------------------------------------------------
+# Startet, sobald lint und unit_tests fertig sind, ohne auf die übrigen Tests zu warten.
+build_wheel:
+  stage: build
+  extends: .python
+  needs: [lint, unit_tests]
+  script:
+    - python -m build --wheel
+    - ls -l dist/
+  artifacts:
+    paths: [dist/]
+    expire_in: 1 week
+
+# Holt sich das Wheel aus build_wheel und installiert es in einer frischen Umgebung.
+install_check:
+  stage: build
+  image: python:3.13-slim
+  needs:
+    - job: build_wheel
+      artifacts: true
+  script:
+    - python -m venv /tmp/fresh
+    - /tmp/fresh/bin/pip install -q -r requirements.txt
+    - /tmp/fresh/bin/pip install --no-deps dist/*.whl
+    - cd /tmp && /tmp/fresh/bin/python -c "import messwert.app; print('INSTALL_OK')"
+
+# --- image (Lab 11) ----------------------------------------------------------
+# Eigener Docker-Daemon im Job (Docker-in-Docker). Braucht einen privileged Runner.
+build_image:
+  stage: image
+  image: docker:27
+  services:
+    - docker:27-dind
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs"
+    IMAGE: "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
+  needs: [build_wheel, integration_tests]
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_TAG
+  script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
+    - docker build --build-arg BUILD_COMMIT="$CI_COMMIT_SHORT_SHA" -t "$IMAGE" .
+    - docker push "$IMAGE"
+    - DIGEST=$(docker inspect --format '{{index .RepoDigests 0}}' "$IMAGE")
+    - echo "Gebaut und gepusht $DIGEST"
+    - echo "IMAGE_DIGEST=$DIGEST" > image.env
+  artifacts:
+    reports:
+      dotenv: image.env   # IMAGE_DIGEST steht danach in späteren Jobs als Variable bereit
+
+# --- verify (Lab 11) ---------------------------------------------------------
+# Das gerade gebaute Image läuft als Service "app", daneben eine frische Datenbank "db".
+container_smoke:
+  stage: verify
+  extends: .python
+  needs: [build_image]
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_TAG
+  services:
+    - name: postgres:17-alpine
+      alias: db
+    - name: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+      alias: app
+  variables:
+    FF_NETWORK_PER_BUILD: "true"      # damit "app" die Datenbank "db" erreicht
+    POSTGRES_DB: messwert
+    POSTGRES_USER: app
+    POSTGRES_PASSWORD: nur-fuer-tests
+    DATABASE_URL: "postgresql://app:nur-fuer-tests@db:5432/messwert"
+    BASE_URL: "http://app:8080"
+  script:
+    - echo "Prüfe $IMAGE_DIGEST"
+    - pytest tests/smoke --junitxml=report-smoke.xml
+  artifacts:
+    when: always
+    reports:
+      junit: report-smoke.xml

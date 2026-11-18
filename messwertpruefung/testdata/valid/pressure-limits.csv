@@ -1,0 +1,7 @@
+# erwartet ausserhalb=2
+device,value,lower,upper,unit
+Druck-1,1013.25,1000,1020,hPa
+Druck-2,1000,1000,1020,hPa
+Druck-3,1020,1000,1020,hPa
+Druck-4,999.99,1000,1020,hPa
+Druck-5,1020.01,1000,1020,hPa

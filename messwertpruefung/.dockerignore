@@ -1,0 +1,4 @@
+# Nur requirements.txt und dist/*.whl gehören in den Build-Kontext.
+*
+!requirements.txt
+!dist/*.whl

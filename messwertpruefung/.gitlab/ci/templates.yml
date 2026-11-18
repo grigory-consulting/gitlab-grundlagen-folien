@@ -1,0 +1,16 @@
+# Gemeinsame Vorlage für alle Python-Jobs.
+# Der Punkt am Anfang (.python) heißt: versteckter Job. Er läuft nicht selbst,
+# andere Jobs übernehmen ihn mit "extends: .python".
+
+.python:
+  image: python:3.13-slim
+  # pip legt heruntergeladene Pakete hier ab; der Ordner wird als Cache aufbewahrt.
+  variables:
+    PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  cache:
+    # Neuer Cache, sobald sich requirements-dev.txt ändert.
+    key:
+      files: [requirements-dev.txt]
+    paths: [.cache/pip]
+  before_script:
+    - pip install -r requirements-dev.txt

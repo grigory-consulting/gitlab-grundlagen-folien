@@ -1,0 +1,4 @@
+device,value,lower,upper,unit
+Sensor-A,20.3,19,21,C
+Sensor-B,23.1,19,21,C
+Sensor-C,19,19,21,C

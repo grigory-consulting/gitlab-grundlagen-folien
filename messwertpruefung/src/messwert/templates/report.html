@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <title>Bericht {{ report.id }} – {{ title }}</title>
+  <style>
+    body { font-family: sans-serif; max-width: 52rem; margin: 2rem auto; padding: 0 1rem; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border-bottom: 1px solid #ccc; padding: .4rem; text-align: left; }
+    .ausserhalb { color: #c00; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <p><a href="/">&larr; {{ title }}</a></p>
+  <h1>Bericht {{ report.id }}</h1>
+  <p>Datei <strong>{{ report.dateiname }}</strong> &middot;
+     {{ report.anzahl }} Werte geprüft, {{ report.ausserhalb }} außerhalb der Grenzen</p>
+
+  <table>
+    <tr><th>Gerät</th><th>Wert</th><th>Untere Grenze</th><th>Obere Grenze</th><th>Einheit</th><th>Ergebnis</th></tr>
+    {% for row in report.zeilen %}
+    <tr>
+      <td>{{ row.device }}</td>
+      <td>{{ row.value }}</td>
+      <td>{{ row.lower }}</td>
+      <td>{{ row.upper }}</td>
+      <td>{{ row.unit }}</td>
+      <td class="{{ '' if row.innerhalb else 'ausserhalb' }}">{{ 'innerhalb' if row.innerhalb else 'außerhalb' }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+
+  <p><a href="/api/reports/{{ report.id }}/export">Bericht als CSV herunterladen</a></p>
+</body>
+</html>

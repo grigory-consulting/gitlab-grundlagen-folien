@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <title>{{ title }}</title>
+  <style>
+    body { font-family: sans-serif; max-width: 52rem; margin: 2rem auto; padding: 0 1rem; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border-bottom: 1px solid #ccc; padding: .4rem; text-align: left; }
+    .fehler { background: #fde8e8; padding: .6rem; border-left: 4px solid #c00; }
+  </style>
+</head>
+<body>
+  <h1>{{ title }}</h1>
+
+  {% if error %}<p class="fehler">{{ error }}</p>{% endif %}
+
+  <h2>CSV hochladen</h2>
+  <form action="/hochladen" method="post" enctype="multipart/form-data">
+    <input type="file" name="datei" accept=".csv" required>
+    <button type="submit">Prüfen</button>
+  </form>
+  <p><small>Spalten: device, value, lower, upper, unit &middot; Komma als Trenner, Dezimalpunkt</small></p>
+
+  <h2>Frühere Prüfungen</h2>
+  {% if reports %}
+  <table>
+    <tr><th>Nr.</th><th>Zeitpunkt</th><th>Datei</th><th>Geprüft</th><th>Außerhalb</th></tr>
+    {% for report in reports %}
+    <tr>
+      <td><a href="/berichte/{{ report.id }}">{{ report.id }}</a></td>
+      <td>{{ report.erstellt.strftime("%d.%m.%Y %H:%M") }}</td>
+      <td>{{ report.dateiname }}</td>
+      <td>{{ report.anzahl }}</td>
+      <td>{{ report.ausserhalb }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <p>Noch keine Prüfungen gespeichert.</p>
+  {% endif %}
+</body>
+</html>

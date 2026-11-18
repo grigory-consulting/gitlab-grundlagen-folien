@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=75", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "messwert"
+version = "1.0.0"
+description = "Messwertprüfung: Messwerte aus CSV gegen Grenzen prüfen (Übungsprojekt GitLab-Schulung)"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "jinja2",
+    "python-multipart",
+    "psycopg[binary]",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+# Ohne diese Zeile fehlen die HTML-Templates im Wheel und im Image.
+[tool.setuptools.package-data]
+messwert = ["templates/*.html"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests/unit"]
+pythonpath = ["src"]
+markers = [
+    "integration: braucht eine laufende PostgreSQL-Datenbank (DATABASE_URL)",
+]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 110
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+
+[tool.coverage.run]
+source = ["messwert"]
+branch = true

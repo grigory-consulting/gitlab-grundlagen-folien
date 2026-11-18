@@ -1997,7 +1997,7 @@ Eine Testmatrix (`parallel:matrix`) macht aus einem Job mehrere. Gibt es zu weni
 
 - Über Scope und Tags legt die Runner-Policy fest, welche Jobs der Runner annimmt. <!-- .element: class="fragment" data-fragment-index="2" -->
 - Jeder Job läuft in einem eigenen Container. Den Docker-Socket des Hosts erreicht das Jobskript nicht. <!-- .element: class="fragment" data-fragment-index="3" -->
-- Für die Produktion baut ein Builder ohne Root-Rechte das Image. Im Kurs übernimmt das Docker-in-Docker, mit `privileged`-Rechten. In die Registry schiebt der Job das Image mit dem Job-Token. <!-- .element: class="fragment" data-fragment-index="4" -->
+- Für die Produktion baut ein Builder ohne Root-Rechte das Image. Im Kurs übernimmt das Docker-in-Docker im privilegierten Modus. In die Registry schiebt der Job das Image mit dem Job-Token. <!-- .element: class="fragment" data-fragment-index="4" -->
 - Die Job-Logs bleiben in GitLab für Audit und Diagnose. <!-- .element: class="fragment" data-fragment-index="5" -->
 
 <div class="fragment" data-fragment-index="6">
